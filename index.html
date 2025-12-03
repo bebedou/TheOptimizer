@@ -10,6 +10,7 @@
             --terminal-bg: #0f0f0f;
             --text-color: #33ff33;
             --alert-color: #ff3333;
+            --warn-color: #ffaa33;
             --dim-color: #4a6b4a;
             --border: 2px solid #33ff33;
         }
@@ -58,20 +59,29 @@
 
         /* Header */
         header {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
             border-bottom: 1px solid var(--dim-color);
             padding-bottom: 10px;
         }
 
+        .stat-box {
+            text-align: center;
+        }
+
         .stat-box span {
             display: block;
-            font-size: 0.9rem;
+            font-size: 0.7rem;
             color: var(--dim-color);
+            margin-bottom: 4px;
         }
         .stat-box strong {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
+        
+        .danger-text { color: var(--alert-color); animation: blink 1s infinite; }
+        .warn-text { color: var(--warn-color); }
 
         /* Main Game Area */
         main {
@@ -102,7 +112,7 @@
             font-weight: bold;
             margin-bottom: 5px;
             text-transform: uppercase;
-            animation: blink 2s infinite;
+            font-size: 0.9rem;
         }
 
         .log-box {
@@ -112,9 +122,10 @@
             color: var(--dim-color);
         }
         
-        .log-entry { margin-bottom: 5px; }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #112211; padding-bottom: 2px; }
         .log-success { color: var(--text-color); }
         .log-fail { color: var(--alert-color); }
+        .log-warn { color: var(--warn-color); }
 
         /* Right Panel: The Employee File */
         .file-card {
@@ -153,6 +164,7 @@
             font-style: italic;
             border-left: 3px solid var(--alert-color);
             min-height: 60px;
+            font-size: 0.9rem;
         }
 
         /* Controls */
@@ -168,7 +180,7 @@
             border: 2px solid;
             padding: 15px;
             font-family: inherit;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             cursor: pointer;
             text-transform: uppercase;
             font-weight: bold;
@@ -194,6 +206,7 @@
             main { grid-template-columns: 1fr; }
             .left-panel { display: none; } /* Hide log on mobile for space */
             .crt-container { height: 100vh; padding: 10px; }
+            header { grid-template-columns: 1fr 1fr; gap: 5px; }
         }
 
         @keyframes blink {
@@ -206,7 +219,7 @@
         #modal-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.9);
+            background-color: rgba(0,0,0,0.95);
             display: none;
             flex-direction: column;
             align-items: center;
@@ -216,6 +229,9 @@
         #modal-content {
             text-align: center;
             max-width: 600px;
+            border: 2px solid var(--text-color);
+            padding: 40px;
+            background-color: #000;
         }
         #next-day-btn {
             margin-top: 20px;
@@ -233,26 +249,45 @@
             font-size: 1.5rem;
             z-index: 20;
         }
+        
+        .stat-bar {
+            width: 100%;
+            height: 5px;
+            background: #333;
+            margin-top: 5px;
+        }
+        .stat-fill {
+            height: 100%;
+            background: var(--text-color);
+            width: 50%;
+            transition: width 0.3s;
+        }
     </style>
 </head>
 <body>
 
     <div class="crt-container">
         <!-- Loading Screen -->
-        <div id="loading-overlay">INITIALIZING SYSTEM...</div>
+        <div id="loading-overlay">INITIALIZING CORPORATE PROTOCOLS...</div>
 
         <header>
             <div class="stat-box">
-                <span>ACCOUNT BALANCE</span>
-                <strong id="score-display">$---</strong>
+                <span>STABILITY</span>
+                <strong id="stability-display">100%</strong>
+                <div class="stat-bar"><div id="stability-bar" class="stat-fill"></div></div>
             </div>
             <div class="stat-box">
-                <span>DATE</span>
-                <strong id="day-display">Day 1</strong>
+                <span>PERFORMANCE</span>
+                <strong id="perf-display">75%</strong>
+                <div class="stat-bar"><div id="perf-bar" class="stat-fill"></div></div>
             </div>
             <div class="stat-box">
-                <span>QUOTA (FIRED)</span>
-                <strong id="quota-display">0 / -</strong>
+                <span>FUNDS</span>
+                <strong id="money-display">$0</strong>
+            </div>
+            <div class="stat-box">
+                <span>DAY / QUOTA</span>
+                <strong id="day-quota-display">1 / 0-3</strong>
             </div>
         </header>
 
@@ -262,8 +297,6 @@
                 <div class="directive-box">
                     <div class="directive-title">>>> DAILY MEMO FROM MANAGEMENT</div>
                     <div id="rule-text">Connecting to database...</div>
-                    <br>
-                    <div style="font-size: 0.8rem; color: #888;">*REMINDER: You must also meet your firing quota regardless of individual stats.*</div>
                 </div>
                 
                 <div class="log-box" id="game-log">
@@ -310,7 +343,7 @@
         </main>
     </div>
 
-    <!-- Day End Modal -->
+    <!-- Day End / Game Over Modal -->
     <div id="modal-overlay">
         <div id="modal-content">
             <h1 id="modal-title">SHIFT ENDED</h1>
@@ -334,7 +367,9 @@
         firedToday: 0,
         processedToday: 0,
         currentEmployee: null,
-        dayEnded: false
+        dayEnded: false,
+        stability: 100,
+        jobPerformance: 75
     };
 
     // --- INITIALIZATION ---
@@ -346,29 +381,27 @@
             
             const data = await response.json();
             
-            // Assign loaded data
             scenarios = data.scenarios;
             dailyRules = data.dailyRules;
             names = data.names;
             roles = data.roles;
             config = data.config;
 
-            // Initialize State using Config
+            // Initialize State
             state.money = config.startingMoney;
             state.quotaTarget = config.startingQuota;
+            state.stability = config.startingStability;
+            state.jobPerformance = config.startingPerformance;
             
-            // Hide Loader
             document.getElementById('loading-overlay').style.display = 'none';
-            logBox.innerHTML += '<div class="log-entry log-success">Database Loaded Successfully.</div>';
+            logBox.innerHTML += '<div class="log-entry log-success">Database Loaded. Protocols Active.</div>';
 
-            // Start Day 1
             initDay();
 
         } catch (error) {
             console.error(error);
             document.getElementById('loading-overlay').innerText = "ERROR: LOAD FAILED";
             logBox.innerHTML += `<div class="log-entry log-fail">CRITICAL ERROR: Could not load 'events.json'.</div>`;
-            logBox.innerHTML += `<div class="log-entry">If testing locally, you must use a local server (e.g. VS Code Live Server) due to browser security policies.</div>`;
         }
     }
 
@@ -392,7 +425,8 @@
             family: template.family,
             note: template.note,
             scenarioId: template.id,
-            isBribe: template.isBribe || false
+            isBribe: template.isBribe || false,
+            stabilityPenalty: template.stabilityPenalty || 0
         };
     }
 
@@ -407,15 +441,11 @@
         state.firedToday = 0;
         state.dayEnded = false;
         
-        // Determine rule (loop last rule if we run out)
         const ruleIndex = Math.min(state.day - 1, dailyRules.length - 1);
         const rule = dailyRules[ruleIndex];
         
-        // Update UI
-        document.getElementById('day-display').innerText = `Day ${state.day}`;
         document.getElementById('rule-text').innerText = rule.text;
-        document.getElementById('quota-display').innerText = `${state.firedToday} / ${state.quotaTarget}`;
-        document.getElementById('score-display').innerText = "$" + state.money;
+        updateUI();
         
         loadNextEmployee();
     }
@@ -449,48 +479,86 @@
         const rule = dailyRules[ruleIndex];
         
         let logMsg = "";
+        let logClass = "";
 
-        // 1. Evaluate Rule Compliance
-        let shouldFire = false;
+        // 1. Determine "Correctness" based on Daily Rule
+        let matchesFireCriteria = false;
+        if (rule.type === 'perf_low' && emp.perf < rule.val) matchesFireCriteria = true;
+        else if (rule.type === 'salary_high' && emp.salary > rule.val) matchesFireCriteria = true;
+        else if (rule.type === 'family_single' && emp.family.includes('Single')) matchesFireCriteria = true;
+        else if (rule.type === 'age_high' && emp.age > rule.val) matchesFireCriteria = true;
+        else if (rule.type === 'role_keyword' && emp.role.includes(rule.val)) matchesFireCriteria = true;
+        else if (rule.type === 'free_fire') matchesFireCriteria = true;
 
-        if (rule.type === 'perf_low' && emp.perf < rule.val) shouldFire = true;
-        else if (rule.type === 'salary_high' && emp.salary > rule.val) shouldFire = true;
-        else if (rule.type === 'family_single' && emp.family.includes('Single')) shouldFire = true;
-        else if (rule.type === 'free_fire') shouldFire = true;
+        // Did player follow instructions?
+        let followedOrders = false;
+        if (action === 'FIRE' && matchesFireCriteria) followedOrders = true;
+        if (action === 'KEEP' && !matchesFireCriteria) followedOrders = true;
 
-        if (emp.scenarioId === 'nepotism') shouldFire = false; 
+        // PERFORMANCE IMPACT
+        if (followedOrders) {
+            state.jobPerformance = Math.min(100, state.jobPerformance + 5);
+            logClass = 'log-success';
+        } else {
+            state.jobPerformance -= 15;
+            logClass = 'log-fail';
+        }
 
-        // 2. Check Decision
+        // STABILITY IMPACT (Only hurts if you Fire important people)
         if (action === 'FIRE') {
             state.firedToday++;
-            if (emp.scenarioId === 'nepotism') {
-                state.money -= 200;
-                logMsg = `ERROR: You fired the CEO's Nephew. Penalty applied.`;
+            if (emp.stabilityPenalty > 0) {
+                state.stability -= emp.stabilityPenalty;
+                logMsg = `TERMINATED: ${emp.name}. WARNING: Stability Impact Detected (-${emp.stabilityPenalty}%)`;
+                logClass = 'log-warn';
             } else {
-                state.money += 50; 
-                logMsg = `TERMINATED: ${emp.name}.`;
+                logMsg = `TERMINATED: ${emp.name}. Stability Unaffected.`;
             }
-        } else { // KEEP
-            if (shouldFire && emp.scenarioId !== 'nepotism') {
-                state.money -= 50;
-                logMsg = `WARNING: ${emp.name} met termination criteria but was retained.`;
-            } else if (emp.isBribe) {
+        } else {
+            // Check for Bribe
+            if (emp.isBribe) {
                 state.money += 500;
                 logMsg = `RETAINED: Bribe accepted ($500).`;
+                logClass = 'log-warn';
             } else {
-                state.money += 50;
                 logMsg = `RETAINED: ${emp.name}.`;
             }
         }
 
-        updateStats();
-        log(logMsg, action === 'FIRE' ? 'log-fail' : 'log-success');
+        // GAME OVER CHECK (Immediate)
+        if (state.jobPerformance <= 0) {
+            triggerGameOver("TERMINATED FOR INCOMPETENCE. Your performance reached 0%.");
+            return;
+        }
+        if (state.stability < 33) {
+            triggerGameOver("COMPANY COLLAPSED. Stability fell below critical levels (33%).");
+            return;
+        }
+
+        updateUI();
+        log(logMsg, logClass);
         loadNextEmployee();
     }
 
-    function updateStats() {
-        document.getElementById('score-display').innerText = "$" + state.money;
-        document.getElementById('quota-display').innerText = `${state.firedToday} / ${state.quotaTarget}`;
+    function updateUI() {
+        document.getElementById('money-display').innerText = "$" + state.money;
+        
+        // Stability
+        const stabEl = document.getElementById('stability-display');
+        stabEl.innerText = state.stability + "%";
+        document.getElementById('stability-bar').style.width = state.stability + "%";
+        if(state.stability < 40) stabEl.className = "danger-text";
+        else stabEl.className = "";
+
+        // Performance
+        const perfEl = document.getElementById('perf-display');
+        perfEl.innerText = state.jobPerformance + "%";
+        document.getElementById('perf-bar').style.width = state.jobPerformance + "%";
+        if(state.jobPerformance < 30) perfEl.className = "danger-text";
+        else perfEl.className = "";
+
+        // Quota
+        document.getElementById('day-quota-display').innerText = `${state.day} / ${state.firedToday}-${state.quotaTarget}`;
     }
 
     function log(msg, className) {
@@ -510,48 +578,73 @@
         
         modal.style.display = 'flex';
 
-        // Evaluate Quota
-        let rent = config.rentCost;
-        let food = config.foodCost;
-        let expenses = rent + food;
-        let quotaBonus = 0;
-        let quotaPenalty = 0;
+        // 1. Calculate Wage based on Performance
+        let performanceBonus = 0;
+        if (state.jobPerformance > 50) {
+            performanceBonus = (state.jobPerformance - 50) * 2;
+        }
+        let dailyWage = config.baseDailyWage + performanceBonus;
 
-        if (state.firedToday >= state.quotaTarget) {
-            quotaBonus = 100;
-        } else {
-            quotaPenalty = 200;
+        // 2. Expenses
+        let expenses = config.rentCost + config.foodCost;
+        
+        // 3. Quota Penalty (if missed)
+        let quotaPenalty = 0;
+        let quotaMsg = `<span style="color:#3f3">MET</span>`;
+        if (state.firedToday < state.quotaTarget) {
+            quotaPenalty = 100; // Flat fine for missing quota
+            quotaMsg = `<span style="color:#f33">MISSED (-$100 Fine)</span>`;
         }
 
-        let dailyNet = quotaBonus - quotaPenalty - expenses;
-        state.money += dailyNet;
+        let netChange = dailyWage - expenses - quotaPenalty;
+        state.money += netChange;
 
-        title.innerText = `DAY ${state.day} COMPLETE`;
+        title.innerText = `SHIFT ${state.day} REPORT`;
         summary.innerHTML = `
-            Rent: -$${rent}<br>
-            Food: -$${food}<br>
-            Quota Met (${state.firedToday}/${state.quotaTarget}): ${state.firedToday >= state.quotaTarget ? '<span style="color:#3f3">YES (+$100)</span>' : '<span style="color:#f33">NO (-$200)</span>'}<br>
-            <hr style="border: 1px dashed #555">
-            <strong>Total Balance: $${state.money}</strong>
+            <div style="text-align:left; margin: 0 auto; display:inline-block;">
+            Job Performance: ${state.jobPerformance}%<br>
+            ---------------------------<br>
+            Base Wage: +$${config.baseDailyWage}<br>
+            Perf. Bonus: +$${performanceBonus}<br>
+            Rent & Food: -$${expenses}<br>
+            Quota Status: ${quotaMsg}<br>
+            ---------------------------<br>
+            <strong>Net Profit: $${netChange}</strong><br>
+            </div>
             <br><br>
-            ${state.money <= 0 ? "<span style='color:red'>WARNING: FUNDS CRITICAL. BANKRUPTCY IMMINENT.</span>" : ""}
+            <h2>TOTAL FUNDS: $${state.money}</h2>
         `;
+        
+        if (state.money < 0) {
+            document.getElementById('next-day-btn').innerText = "GAME OVER";
+            document.getElementById('next-day-btn').onclick = () => location.reload();
+            summary.innerHTML += "<br><span style='color:red'>YOU HAVE GONE BANKRUPT. EVICTED.</span>";
+        }
     }
 
     function startNextDay() {
-        if (state.money < 0) {
-            alert("GAME OVER. You have run out of money. Your own employment has been terminated.");
-            location.reload();
-            return;
-        }
-        
         state.day++;
         state.quotaTarget++; 
         document.getElementById('modal-overlay').style.display = 'none';
         initDay();
     }
+    
+    function triggerGameOver(reason) {
+        state.dayEnded = true;
+        const modal = document.getElementById('modal-overlay');
+        const title = document.getElementById('modal-title');
+        const summary = document.getElementById('modal-summary');
+        const btn = document.getElementById('next-day-btn');
+        
+        modal.style.display = 'flex';
+        title.innerText = "GAME OVER";
+        title.style.color = "red";
+        summary.innerHTML = `<h3 style="color:red">${reason}</h3><br>You have been removed from the building.`;
+        
+        btn.innerText = "RESTART SYSTEM";
+        btn.onclick = () => location.reload();
+    }
 
-    // Start System
     initGame();
 
 </script>

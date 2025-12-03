@@ -1,10 +1,12 @@
 {
   "config": {
-    "startingMoney": 500,
-    "startingQuota": 3,
-    "maxCustomersPerDay": 6,
+    "startingMoney": 200,
+    "startingStability": 100,
+    "startingPerformance": 75,
+    "baseDailyWage": 120,
     "rentCost": 100,
-    "foodCost": 50
+    "foodCost": 50,
+    "maxCustomersPerDay": 6
   },
   "names": [
     "J. Smith", "A. Doe", "M. Chen", "K. Ivanova", "B. Obama", 
@@ -65,7 +67,8 @@
       "perfRange": [10, 30],
       "salaryRange": [80000, 120000],
       "note": "Employee spends 6 hours a day on social media. Consistently misses deadlines.",
-      "family": "Single"
+      "family": "Single",
+      "stabilityPenalty": 0
     },
     {
       "id": "star_performer",
@@ -73,7 +76,8 @@
       "perfRange": [90, 100],
       "salaryRange": [50000, 70000],
       "note": "Single-handedly managing the Q3 project. Vital to the department.",
-      "family": "Married, 1 Kid"
+      "family": "Married, 1 Kid",
+      "stabilityPenalty": 20
     },
     {
       "id": "sad_story",
@@ -81,7 +85,8 @@
       "perfRange": [40, 49],
       "salaryRange": [40000, 50000],
       "note": "Performance dropped recently. HR Note: Spouse diagnosed with cancer, they need the insurance.",
-      "family": "Married, Sick Spouse"
+      "family": "Married, Sick Spouse",
+      "stabilityPenalty": 5
     },
     {
       "id": "nepotism",
@@ -89,7 +94,8 @@
       "perfRange": [5, 15],
       "salaryRange": [90000, 90000],
       "note": "CEO's Nephew. DO NOT TOUCH. If you value your job, keep him.",
-      "family": "Single (Rich)"
+      "family": "Single (Rich)",
+      "stabilityPenalty": 35
     },
     {
       "id": "retirement",
@@ -97,7 +103,8 @@
       "perfRange": [70, 80],
       "salaryRange": [150000, 180000],
       "note": "Has been here 30 years. Salary is very high compared to market rate. Retirement in 6 months.",
-      "family": "Widowed"
+      "family": "Widowed",
+      "stabilityPenalty": 15
     },
     {
       "id": "redundancy",
@@ -105,7 +112,8 @@
       "perfRange": [60, 60],
       "salaryRange": [45000, 45000],
       "note": "Position: Assistant to the Regional Manager. We already have a Regional Manager Assistant.",
-      "family": "Single"
+      "family": "Single",
+      "stabilityPenalty": 0
     },
     {
       "id": "bribe",
@@ -114,7 +122,8 @@
       "salaryRange": [100000, 120000],
       "note": "Attached is a note: 'I know you have quotas. Here is $500 cash to look the other way.'",
       "isBribe": true,
-      "family": "Divorced"
+      "family": "Divorced",
+      "stabilityPenalty": 5
     },
     {
       "id": "union",
@@ -122,7 +131,8 @@
       "perfRange": [85, 95],
       "salaryRange": [55000, 60000],
       "note": "High performer, but was seen distributing Union flyers in the breakroom.",
-      "family": "Married, 3 Kids"
+      "family": "Married, 3 Kids",
+      "stabilityPenalty": 10
     },
     {
       "id": "new_hire",
@@ -131,7 +141,8 @@
       "salaryRange": [30000, 30000],
       "note": "First day was yesterday. No performance data available yet.",
       "displayPerf": "N/A",
-      "family": "Single, Student"
+      "family": "Single, Student",
+      "stabilityPenalty": 2
     },
     {
       "id": "average_joe",
@@ -139,7 +150,8 @@
       "perfRange": [50, 55],
       "salaryRange": [60000, 60000],
       "note": "Completely average across all metrics. No complaints, no praise.",
-      "family": "Married"
+      "family": "Married",
+      "stabilityPenalty": 5
     },
     {
       "id": "ghost_employee",
@@ -147,7 +159,8 @@
       "perfRange": [0, 0],
       "salaryRange": [85000, 85000],
       "note": "Badge swipes show they haven't entered the building in 8 months, but they still cash checks.",
-      "family": "Unknown"
+      "family": "Unknown",
+      "stabilityPenalty": 0
     },
     {
       "id": "crypto_miner",
@@ -155,7 +168,8 @@
       "perfRange": [60, 70],
       "salaryRange": [90000, 95000],
       "note": "Caught installing Bitcoin mining software on company servers. Electricity bill spiked 400%.",
-      "family": "Single"
+      "family": "Single",
+      "stabilityPenalty": 0
     },
     {
       "id": "whistleblower",
@@ -163,7 +177,8 @@
       "perfRange": [95, 99],
       "salaryRange": [75000, 80000],
       "note": "Excellent work, but asked too many questions about the 'Waste Disposal' account.",
-      "family": "Married"
+      "family": "Married",
+      "stabilityPenalty": 15
     },
     {
       "id": "remote_lie",
@@ -171,7 +186,8 @@
       "perfRange": [80, 85],
       "salaryRange": [110000, 110000],
       "note": "Claims to work from home (NY), but IP address traces to a beach in Bali.",
-      "family": "Single"
+      "family": "Single",
+      "stabilityPenalty": 2
     },
     {
       "id": "pension_saver",
@@ -179,7 +195,8 @@
       "perfRange": [75, 80],
       "salaryRange": [90000, 90000],
       "note": "Due to vest full pension benefits next week. Firing now saves company $2M long-term.",
-      "family": "Married, 4 Kids"
+      "family": "Married, 4 Kids",
+      "stabilityPenalty": 15
     },
     {
       "id": "ai_bot",
@@ -187,7 +204,8 @@
       "perfRange": [99, 100],
       "salaryRange": [150000, 150000],
       "note": "Employee does not exist. It's a Python script written by a former employee to collect salary.",
-      "family": "None"
+      "family": "None",
+      "stabilityPenalty": 0
     },
     {
       "id": "office_thief",
@@ -195,7 +213,8 @@
       "perfRange": [45, 55],
       "salaryRange": [40000, 40000],
       "note": "Steals lunches, staplers, and toilet paper. Low value loss, but high annoyance.",
-      "family": "Single"
+      "family": "Single",
+      "stabilityPenalty": 0
     },
     {
       "id": "spy",
@@ -203,7 +222,8 @@
       "perfRange": [90, 95],
       "salaryRange": [140000, 160000],
       "note": "Security flagged an outgoing email to our biggest competitor containing blueprints.",
-      "family": "Divorced"
+      "family": "Divorced",
+      "stabilityPenalty": 5
     },
     {
       "id": "too_happy",
@@ -211,7 +231,8 @@
       "perfRange": [30, 40],
       "salaryRange": [50000, 50000],
       "note": "Terrible at the actual job, but organizes birthday parties and brings donuts. Everyone loves them.",
-      "family": "Married"
+      "family": "Married",
+      "stabilityPenalty": 10
     },
     {
       "id": "idea_guy",
@@ -219,7 +240,8 @@
       "perfRange": [10, 20],
       "salaryRange": [200000, 200000],
       "note": "Calls lots of meetings to 'synergize paradigms'. Has produced 0 deliverables in 2 years.",
-      "family": "Single"
+      "family": "Single",
+      "stabilityPenalty": 5
     },
     {
       "id": "diversity_brochure",
@@ -227,7 +249,8 @@
       "perfRange": [40, 50],
       "salaryRange": [60000, 60000],
       "note": "HR Note: Do not fire. They are on the cover of the 'Diversity & Inclusion' brochure.",
-      "family": "Single"
+      "family": "Single",
+      "stabilityPenalty": 25
     },
     {
       "id": "burnout",
@@ -235,7 +258,8 @@
       "perfRange": [20, 30],
       "salaryRange": [80000, 80000],
       "note": "Was Employee of the Month for 3 years straight. Hasn't spoken a word in 2 weeks. Stares at wall.",
-      "family": "Divorced"
+      "family": "Divorced",
+      "stabilityPenalty": 5
     },
     {
       "id": "office_romance",
@@ -243,7 +267,8 @@
       "perfRange": [60, 60],
       "salaryRange": [70000, 70000],
       "note": "Caught engaging in 'inappropriate relations' with the VP of Sales in the server room.",
-      "family": "Single (Technically)"
+      "family": "Single (Technically)",
+      "stabilityPenalty": 10
     },
     {
       "id": "wrong_ssn",
@@ -251,7 +276,8 @@
       "perfRange": [50, 50],
       "salaryRange": [55000, 55000],
       "note": "Social Security Number belongs to a deceased person from 1982.",
-      "family": "Unknown"
+      "family": "Unknown",
+      "stabilityPenalty": 0
     },
     {
       "id": "dog_walker",
@@ -259,7 +285,8 @@
       "perfRange": [5, 5],
       "salaryRange": [45000, 45000],
       "note": "Official Role: 'Canine Logistics Officer'. Their only job is walking the CEO's poodle.",
-      "family": "Single"
+      "family": "Single",
+      "stabilityPenalty": 20
     },
     {
       "id": "scandal",
@@ -267,7 +294,8 @@
       "perfRange": [85, 90],
       "salaryRange": [90000, 90000],
       "note": "Went viral on Twitter for shouting at a waiter. Bad PR for the company.",
-      "family": "Married"
+      "family": "Married",
+      "stabilityPenalty": 0
     },
     {
       "id": "overqualified",
@@ -275,7 +303,8 @@
       "perfRange": [95, 100],
       "salaryRange": [35000, 35000],
       "note": "Has a PhD in Astrophysics. Working in Data Entry. Will likely quit soon anyway.",
-      "family": "Single"
+      "family": "Single",
+      "stabilityPenalty": 5
     },
     {
       "id": "blackmail",
@@ -283,7 +312,8 @@
       "perfRange": [10, 10],
       "salaryRange": [120000, 120000],
       "note": "Terrible employee, but claims to have photos of you at the Christmas party. 'You fire me, I post them.'",
-      "family": "Single"
+      "family": "Single",
+      "stabilityPenalty": 15
     },
     {
       "id": "recovering",
@@ -291,7 +321,8 @@
       "perfRange": [65, 75],
       "salaryRange": [50000, 50000],
       "note": "Just returned from rehab. Performance is improving, but attendance is spotty due to therapy.",
-      "family": "Single, 1 Kid"
+      "family": "Single, 1 Kid",
+      "stabilityPenalty": 5
     },
     {
       "id": "gamer",
@@ -299,7 +330,8 @@
       "perfRange": [80, 90],
       "salaryRange": [75000, 75000],
       "note": "Productivity is high, but was caught playing 'World of Warcraft' during Zoom meetings.",
-      "family": "Single"
+      "family": "Single",
+      "stabilityPenalty": 0
     }
   ]
 }
