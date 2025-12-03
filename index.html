@@ -353,7 +353,7 @@
     </div>
 
 <script>
-    // --- GLOBAL VARIABLES (Populated from JSON) ---
+    // --- GLOBAL VARIABLES ---
     let scenarios = [];
     let dailyRules = [];
     let names = [];
@@ -369,7 +369,9 @@
         currentEmployee: null,
         dayEnded: false,
         stability: 100,
-        jobPerformance: 100
+        jobPerformance: 100,
+        dayQueue: [], // The pre-generated queue for the day
+        customersThisDay: 6 // Will scale dynamically
     };
 
     // --- INITIALIZATION ---
@@ -378,7 +380,6 @@
         try {
             const response = await fetch('events.json');
             
-            // Safety check if file is missing/wrong
             if (response.ok) {
                 const data = await response.json();
                 scenarios = data.scenarios || [];
@@ -395,12 +396,10 @@
             console.error(error);
             document.getElementById('loading-overlay').innerText = "ERROR: LOAD FAILED";
             logBox.innerHTML += `<div class="log-entry log-fail">CRITICAL ERROR: Could not load 'events.json'. Using Fallbacks.</div>`;
-            // Fallback empty data to prevent crash
             config = {}; 
             dailyRules = [{ day: 1, text: "System Error. Fire anyone.", type: "free_fire" }];
             scenarios = [{ id: "error", title: "Error", note: "Data corrupt", perfRange:[50,50], salaryRange:[50000,50000], family: "Unknown" }];
         } finally {
-             // Initialize State with Safe Defaults (Requested by User)
             state.money = (config.startingMoney !== undefined) ? config.startingMoney : 500;
             state.quotaTarget = (config.startingQuota !== undefined) ? config.startingQuota : 3;
             state.stability = (config.startingStability !== undefined) ? config.startingStability : 100;
@@ -411,42 +410,8 @@
         }
     }
 
-    // --- GENERATORS ---
-    function generateEmployee() {
-        // Safety check if scenarios empty
-        if (!scenarios || scenarios.length === 0) return { name: "Error", role: "Error", age: 0, salary: 0, perf: 0, displayPerf: 0, family: "None", note: "No Data", stabilityPenalty: 0 };
-
-        const template = scenarios[Math.floor(Math.random() * scenarios.length)];
-        
-        const perf = template.displayPerf ? 
-            (template.displayPerf === "N/A" ? 0 : 50) : 
-            randomInt(template.perfRange[0], template.perfRange[1]);
-            
-        const salary = randomInt(template.salaryRange[0], template.salaryRange[1]);
-        const nList = (names.length > 0) ? names : ["Unknown"];
-        const rList = (roles.length > 0) ? roles : ["Worker"];
-
-        return {
-            name: nList[Math.floor(Math.random() * nList.length)],
-            role: rList[Math.floor(Math.random() * rList.length)],
-            age: randomInt(22, 65),
-            salary: salary,
-            perf: perf,
-            displayPerf: template.displayPerf || perf,
-            family: template.family,
-            note: template.note,
-            scenarioId: template.id,
-            isBribe: template.isBribe || false,
-            stabilityPenalty: template.stabilityPenalty || 0
-        };
-    }
-
-    function randomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1) + min);
-    }
-
-    // --- GAME LOGIC ---
-
+    // --- ROSTER GENERATION SYSTEM ---
+    
     function initDay() {
         state.processedToday = 0;
         state.firedToday = 0;
@@ -460,24 +425,113 @@
             rule = { text: "No Directives Found.", type: "free_fire" };
         }
         
+        // 1. Scale Day Length based on Quota
+        // We ensure there are always at least (Quota + 2) employees to process
+        const minCustomers = state.quotaTarget + 2;
+        const cfgMax = (config.maxCustomersPerDay !== undefined) ? config.maxCustomersPerDay : 6;
+        state.customersThisDay = Math.max(cfgMax, minCustomers);
+        
+        // 2. Generate the Roster
+        generateDailyRoster(rule, state.quotaTarget, state.customersThisDay);
+
+        // 3. UI Updates
         document.getElementById('rule-text').innerText = rule.text;
         updateUI();
         
-        // Ensure max customers has a default
-        const maxCust = (config.maxCustomersPerDay !== undefined) ? config.maxCustomersPerDay : 5;
-        if (state.processedToday < maxCust) {
-             loadNextEmployee();
-        }
+        loadNextEmployee();
     }
 
+    function generateDailyRoster(rule, requiredMatches, totalCount) {
+        state.dayQueue = [];
+        
+        // Step A: Generate Mandatory Matches (The "Guilty")
+        // These ensure the day is mathematically solvable
+        for (let i = 0; i < requiredMatches; i++) {
+            state.dayQueue.push(generateEmployee(rule, true));
+        }
+
+        // Step B: Generate Fillers (The "Innocent" or Randoms)
+        const fillerCount = totalCount - requiredMatches;
+        for (let i = 0; i < fillerCount; i++) {
+            // We pass 'false' to forceMatch, meaning "Don't force a match", just be random.
+            // Note: Random might accidentally match too, which is fine (easier day).
+            state.dayQueue.push(generateEmployee(rule, false));
+        }
+
+        // Step C: Shuffle the Queue
+        // Fisher-Yates shuffle algorithm
+        for (let i = state.dayQueue.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [state.dayQueue[i], state.dayQueue[j]] = [state.dayQueue[j], state.dayQueue[i]];
+        }
+        
+        console.log(`Generated Roster: ${state.dayQueue.length} employees. Guaranteed Guilty: ${requiredMatches}`);
+    }
+
+    function generateEmployee(rule, forceMatch) {
+        if (!scenarios || scenarios.length === 0) return { name: "Error" };
+
+        const template = scenarios[Math.floor(Math.random() * scenarios.length)];
+        
+        // Basic Stats
+        let perf = template.displayPerf ? 
+            (template.displayPerf === "N/A" ? 0 : 50) : 
+            randomInt(template.perfRange[0], template.perfRange[1]);
+        let displayPerf = template.displayPerf || perf;
+        let salary = randomInt(template.salaryRange[0], template.salaryRange[1]);
+        let age = randomInt(22, 65);
+        let family = template.family;
+        let role = (roles.length > 0) ? roles[Math.floor(Math.random() * roles.length)] : "Worker";
+        let name = (names.length > 0) ? names[Math.floor(Math.random() * names.length)] : "Unknown";
+
+        // --- OVERRIDE LOGIC ---
+        if (forceMatch && rule) {
+            // Surgically alter stats to ensure they are firable under the current rule
+            if (rule.type === 'salary_high') {
+                salary = randomInt(rule.val + 1000, rule.val + 50000);
+            } else if (rule.type === 'perf_low') {
+                perf = randomInt(0, rule.val - 1);
+                displayPerf = perf;
+            } else if (rule.type === 'family_single') {
+                family = "Single";
+            } else if (rule.type === 'age_high') {
+                age = randomInt(rule.val + 1, 65);
+            } else if (rule.type === 'role_keyword') {
+                 // Try to find a role that matches the keyword
+                 const matchingRole = roles.find(r => r.includes(rule.val));
+                 if (matchingRole) role = matchingRole;
+            }
+        }
+
+        return {
+            name: name,
+            role: role,
+            age: age,
+            salary: salary,
+            perf: perf,
+            displayPerf: displayPerf,
+            family: family,
+            note: template.note,
+            scenarioId: template.id,
+            isBribe: template.isBribe || false,
+            stabilityPenalty: template.stabilityPenalty || 0
+        };
+    }
+
+    function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    // --- GAMEPLAY LOOP ---
+
     function loadNextEmployee() {
-        const maxCust = (config.maxCustomersPerDay !== undefined) ? config.maxCustomersPerDay : 5;
-        if (state.processedToday >= maxCust) {
+        if (state.dayQueue.length === 0) {
             endDay();
             return;
         }
 
-        state.currentEmployee = generateEmployee();
+        // Pop from the pre-generated queue
+        state.currentEmployee = state.dayQueue.pop();
         renderEmployee(state.currentEmployee);
         state.processedToday++;
     }
@@ -508,7 +562,7 @@
         let logMsg = "";
         let logClass = "";
 
-        // 1. Determine "Correctness" based on Daily Rule
+        // 1. Check Compliance
         let matchesFireCriteria = false;
         if (rule.type === 'perf_low' && emp.perf < rule.val) matchesFireCriteria = true;
         else if (rule.type === 'salary_high' && emp.salary > rule.val) matchesFireCriteria = true;
@@ -517,12 +571,11 @@
         else if (rule.type === 'role_keyword' && emp.role.includes(rule.val)) matchesFireCriteria = true;
         else if (rule.type === 'free_fire') matchesFireCriteria = true;
 
-        // Did player follow instructions?
         let followedOrders = false;
         if (action === 'FIRE' && matchesFireCriteria) followedOrders = true;
         if (action === 'KEEP' && !matchesFireCriteria) followedOrders = true;
 
-        // PERFORMANCE IMPACT
+        // 2. Apply Effects
         if (followedOrders) {
             state.jobPerformance = Math.min(100, state.jobPerformance + 5);
             logClass = 'log-success';
@@ -531,18 +584,16 @@
             logClass = 'log-fail';
         }
 
-        // STABILITY IMPACT (Only hurts if you Fire important people)
         if (action === 'FIRE') {
             state.firedToday++;
             if (emp.stabilityPenalty > 0) {
                 state.stability -= emp.stabilityPenalty;
-                logMsg = `TERMINATED: ${emp.name}. WARNING: Stability Impact Detected (-${emp.stabilityPenalty}%)`;
+                logMsg = `TERMINATED: ${emp.name}. WARNING: Stability Impact (-${emp.stabilityPenalty}%)`;
                 logClass = 'log-warn';
             } else {
                 logMsg = `TERMINATED: ${emp.name}. Stability Unaffected.`;
             }
         } else {
-            // Check for Bribe
             if (emp.isBribe) {
                 state.money += 500;
                 logMsg = `RETAINED: Bribe accepted ($500).`;
@@ -552,13 +603,13 @@
             }
         }
 
-        // GAME OVER CHECK (Immediate)
+        // 3. Immediate Game Over Checks
         if (state.jobPerformance <= 0) {
-            triggerGameOver("TERMINATED FOR INCOMPETENCE. Your performance reached 0%.");
+            triggerGameOver("TERMINATED FOR INCOMPETENCE. Performance reached 0%.");
             return;
         }
         if (state.stability < 33) {
-            triggerGameOver("COMPANY COLLAPSED. Stability fell below critical levels (33%).");
+            triggerGameOver("COMPANY COLLAPSED. Stability Critical (33%).");
             return;
         }
 
@@ -570,21 +621,18 @@
     function updateUI() {
         document.getElementById('money-display').innerText = "$" + state.money;
         
-        // Stability
         const stabEl = document.getElementById('stability-display');
         stabEl.innerText = state.stability + "%";
         document.getElementById('stability-bar').style.width = Math.max(0, state.stability) + "%";
         if(state.stability < 40) stabEl.className = "danger-text";
         else stabEl.className = "";
 
-        // Performance
         const perfEl = document.getElementById('perf-display');
         perfEl.innerText = state.jobPerformance + "%";
         document.getElementById('perf-bar').style.width = Math.max(0, state.jobPerformance) + "%";
         if(state.jobPerformance < 30) perfEl.className = "danger-text";
         else perfEl.className = "";
 
-        // Quota
         document.getElementById('day-quota-display').innerText = `${state.day} / ${state.firedToday}-${state.quotaTarget}`;
     }
 
@@ -605,31 +653,30 @@
         
         modal.style.display = 'flex';
 
-        // Defaults to prevent NaN
         const baseWage = (config.baseDailyWage !== undefined) ? config.baseDailyWage : 120;
         const rent = (config.rentCost !== undefined) ? config.rentCost : 100;
         const food = (config.foodCost !== undefined) ? config.foodCost : 50;
 
-        // 1. Calculate Wage based on Performance
         let performanceBonus = 0;
         if (state.jobPerformance > 50) {
             performanceBonus = (state.jobPerformance - 50) * 2;
         }
         let dailyWage = baseWage + performanceBonus;
 
-        // 2. Expenses
         let expenses = rent + food;
-        
-        // 3. Quota Penalty (if missed)
         let quotaPenalty = 0;
         let quotaMsg = `<span style="color:#3f3">MET</span>`;
+        
         if (state.firedToday < state.quotaTarget) {
-            quotaPenalty = 100; // Flat fine for missing quota
-            
-            // --- BIG PERFORMANCE PENALTY APPLIED HERE ---
+            quotaPenalty = 100; 
             state.jobPerformance = Math.max(0, state.jobPerformance - 30);
-            
             quotaMsg = `<span style="color:#f33">MISSED (Perf -30%, -$100 Fine)</span>`;
+        }
+
+        if (state.jobPerformance <= 0) {
+            modal.style.display = 'none';
+            triggerGameOver("TERMINATED FOR INCOMPETENCE. Performance hit 0% after penalties.");
+            return;
         }
 
         let netChange = dailyWage - expenses - quotaPenalty;
