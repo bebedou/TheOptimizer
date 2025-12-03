@@ -1,8 +1,8 @@
 {
   "config": {
-    "startingMoney": 200,
+    "startingMoney": 500,
     "startingStability": 100,
-    "startingPerformance": 75,
+    "startingPerformance": 100,
     "baseDailyWage": 120,
     "rentCost": 100,
     "foodCost": 50,
@@ -65,6 +65,7 @@
       "id": "dead_weight",
       "title": "The Dead Weight",
       "perfRange": [10, 30],
+      "maxPerf": 40,
       "salaryRange": [80000, 120000],
       "note": "Employee spends 6 hours a day on social media. Consistently misses deadlines.",
       "family": "Single",
@@ -74,10 +75,11 @@
       "id": "star_performer",
       "title": "The Star",
       "perfRange": [90, 100],
+      "minPerf": 85,
       "salaryRange": [50000, 70000],
       "note": "Single-handedly managing the Q3 project. Vital to the department.",
       "family": "Married, 1 Kid",
-      "stabilityPenalty": 20
+      "stabilityPenalty": 25
     },
     {
       "id": "sad_story",
@@ -86,16 +88,17 @@
       "salaryRange": [40000, 50000],
       "note": "Performance dropped recently. HR Note: Spouse diagnosed with cancer, they need the insurance.",
       "family": "Married, Sick Spouse",
-      "stabilityPenalty": 5
+      "stabilityPenalty": 10
     },
     {
       "id": "nepotism",
       "title": "The Nephew",
       "perfRange": [5, 15],
+      "maxPerf": 30,
       "salaryRange": [90000, 90000],
       "note": "CEO's Nephew. DO NOT TOUCH. If you value your job, keep him.",
       "family": "Single (Rich)",
-      "stabilityPenalty": 35
+      "stabilityPenalty": 40
     },
     {
       "id": "retirement",
@@ -104,7 +107,8 @@
       "salaryRange": [150000, 180000],
       "note": "Has been here 30 years. Salary is very high compared to market rate. Retirement in 6 months.",
       "family": "Widowed",
-      "stabilityPenalty": 15
+      "minAge": 55,
+      "stabilityPenalty": 20
     },
     {
       "id": "redundancy",
@@ -132,7 +136,7 @@
       "salaryRange": [55000, 60000],
       "note": "High performer, but was seen distributing Union flyers in the breakroom.",
       "family": "Married, 3 Kids",
-      "stabilityPenalty": 10
+      "stabilityPenalty": 15
     },
     {
       "id": "new_hire",
@@ -142,6 +146,7 @@
       "note": "First day was yesterday. No performance data available yet.",
       "displayPerf": "N/A",
       "family": "Single, Student",
+      "maxAge": 26,
       "stabilityPenalty": 2
     },
     {
@@ -178,7 +183,7 @@
       "salaryRange": [75000, 80000],
       "note": "Excellent work, but asked too many questions about the 'Waste Disposal' account.",
       "family": "Married",
-      "stabilityPenalty": 15
+      "stabilityPenalty": 20
     },
     {
       "id": "remote_lie",
@@ -187,7 +192,7 @@
       "salaryRange": [110000, 110000],
       "note": "Claims to work from home (NY), but IP address traces to a beach in Bali.",
       "family": "Single",
-      "stabilityPenalty": 2
+      "stabilityPenalty": 5
     },
     {
       "id": "pension_saver",
@@ -232,7 +237,7 @@
       "salaryRange": [50000, 50000],
       "note": "Terrible at the actual job, but organizes birthday parties and brings donuts. Everyone loves them.",
       "family": "Married",
-      "stabilityPenalty": 10
+      "stabilityPenalty": 15
     },
     {
       "id": "idea_guy",
@@ -250,7 +255,7 @@
       "salaryRange": [60000, 60000],
       "note": "HR Note: Do not fire. They are on the cover of the 'Diversity & Inclusion' brochure.",
       "family": "Single",
-      "stabilityPenalty": 25
+      "stabilityPenalty": 30
     },
     {
       "id": "burnout",
@@ -286,7 +291,7 @@
       "salaryRange": [45000, 45000],
       "note": "Official Role: 'Canine Logistics Officer'. Their only job is walking the CEO's poodle.",
       "family": "Single",
-      "stabilityPenalty": 20
+      "stabilityPenalty": 25
     },
     {
       "id": "scandal",
@@ -335,27 +340,93 @@
     }
   ],
   "newsStories": {
-    "dead_weight": "became a Reddit moderator. They wield immense power now.",
-    "star_performer": "launched a startup in Silicon Valley. It was just valued at $1B.",
-    "sad_story": "lost their home. Local charities are organizing a fundraiser.",
-    "nepotism": "complained to their Uncle (the CEO). Internal Affairs is reviewing your file.",
-    "retirement": "moved to Florida immediately. They seem happier than ever.",
-    "redundancy": "started a popular blog about corporate inefficiency.",
-    "bribe": "was arrested for attempting to bribe a police officer during a traffic stop.",
-    "union": "is organizing a massive protest outside the building tomorrow.",
-    "new_hire": "is confused why they were fired on day 2. They are crying in the lobby.",
-    "average_joe": "found a similar job at a paper company in Slough.",
-    "ghost_employee": "vanished. No one can find them. Did they ever exist?",
-    "crypto_miner": "is now mining Dogecoin in their garage full time.",
-    "whistleblower": "leaked documents to the press. Our stock price dropped 4% after hours.",
-    "office_thief": "was caught stealing staplers from the unemployment office.",
-    "spy": "fled the country. Interpol has issued a warrant for their arrest.",
-    "too_happy": "is now a motivational speaker. 'The Power of Rejection' is a bestseller.",
-    "idea_guy": "is pitching 'Uber for Toasters' to investors. He has raised $2M.",
-    "burnout": "is sleeping for 14 hours a day. Recovery is slow but steady.",
-    "office_romance": "broke up with the VP of Sales. Awkward tension in the elevators.",
-    "gamer": "started a Twitch stream. 'Fired % Speedrun' is trending #1.",
-    "remote_lie": "is enjoying a permanent vacation in Bali.",
-    "default": "is currently seeking new employment opportunities."
+    "dead_weight": [
+      "became a Reddit moderator. They wield immense power now.",
+      "started a podcast about 'Quiet Quitting' that no one listens to."
+    ],
+    "star_performer": [
+      "launched a startup in Silicon Valley. It was just valued at $1B.",
+      "was immediately hired by our biggest competitor. We are doomed."
+    ],
+    "sad_story": [
+      "lost their home. Local charities are organizing a fundraiser.",
+      "was seen sleeping in their car outside the office."
+    ],
+    "nepotism": [
+      "complained to their Uncle (the CEO). Internal Affairs is reviewing your file.",
+      "got promoted to VP at another company owned by his dad."
+    ],
+    "retirement": [
+      "moved to Florida immediately. They seem happier than ever.",
+      "passed away peacefully in their sleep two days later."
+    ],
+    "redundancy": [
+      "started a popular blog about corporate inefficiency.",
+      "found a new job doing the exact same thing for half the pay."
+    ],
+    "bribe": [
+      "was arrested for attempting to bribe a police officer during a traffic stop.",
+      "is now working in local politics."
+    ],
+    "union": [
+      "is organizing a massive protest outside the building tomorrow.",
+      "sued the company for wrongful termination and won."
+    ],
+    "new_hire": [
+      "is confused why they were fired on day 2. They are crying in the lobby.",
+      "didn't even unpack their box. They just walked out."
+    ],
+    "average_joe": [
+      "found a similar job at a paper company in Slough.",
+      "is enjoying some time off to paint."
+    ],
+    "ghost_employee": [
+      "vanished. No one can find them. Did they ever exist?",
+      "was actually a squirrel living in the server room."
+    ],
+    "crypto_miner": [
+      "is now mining Dogecoin in their garage full time.",
+      "caused a blackout in their neighborhood trying to set up a server farm."
+    ],
+    "whistleblower": [
+      "leaked documents to the press. Our stock price dropped 4% after hours.",
+      "is writing a tell-all book about the company's waste disposal practices."
+    ],
+    "office_thief": [
+      "was caught stealing staplers from the unemployment office.",
+      "opened an eBay store selling 'vintage' office supplies."
+    ],
+    "spy": [
+      "fled the country. Interpol has issued a warrant for their arrest.",
+      "was seen entering the Russian embassy."
+    ],
+    "too_happy": [
+      "is now a motivational speaker. 'The Power of Rejection' is a bestseller.",
+      "started a donut shop. It's wildly popular."
+    ],
+    "idea_guy": [
+      "is pitching 'Uber for Toasters' to investors. He has raised $2M.",
+      "started a consulting firm that advises on how to have better meetings."
+    ],
+    "burnout": [
+      "is sleeping for 14 hours a day. Recovery is slow but steady.",
+      "moved to a farm to raise alpacas. No WiFi allowed."
+    ],
+    "office_romance": [
+      "broke up with the VP of Sales. Awkward tension in the elevators.",
+      "got married to the VP of Sales in Vegas this weekend."
+    ],
+    "gamer": [
+      "started a Twitch stream. 'Fired % Speedrun' is trending #1.",
+      "is finally ranked top 500 in Overwatch now that they have free time."
+    ],
+    "remote_lie": [
+      "is enjoying a permanent vacation in Bali.",
+      "claimed unemployment benefits from a beach in Thailand."
+    ],
+    "default": [
+      "is currently seeking new employment opportunities.",
+      "was seen updating their LinkedIn profile."
+    ]
   }
 }

@@ -42,7 +42,6 @@
             position: relative;
         }
 
-        /* Scanline effect */
         .crt-container::before {
             content: " ";
             display: block;
@@ -57,47 +56,37 @@
             pointer-events: none;
         }
 
-        /* Header */
         header {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             border-bottom: 1px solid var(--dim-color);
             padding-bottom: 10px;
+            flex-shrink: 0;
         }
 
-        .stat-box {
-            text-align: center;
-        }
-
-        .stat-box span {
-            display: block;
-            font-size: 0.7rem;
-            color: var(--dim-color);
-            margin-bottom: 4px;
-        }
-        .stat-box strong {
-            font-size: 1.1rem;
-        }
+        .stat-box { text-align: center; }
+        .stat-box span { display: block; font-size: 0.7rem; color: var(--dim-color); margin-bottom: 4px; }
+        .stat-box strong { font-size: 1.1rem; }
         
         .danger-text { color: var(--alert-color); animation: blink 1s infinite; }
         .warn-text { color: var(--warn-color); }
 
-        /* Main Game Area */
         main {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            height: 100%;
-            overflow: hidden;
+            min-height: 0; 
+            overflow: hidden; 
         }
 
-        /* Left Panel: Directives & Log */
         .left-panel {
             border-right: 1px solid var(--dim-color);
             padding-right: 20px;
             display: flex;
             flex-direction: column;
+            min-height: 0; 
+            overflow: hidden;
         }
 
         .directive-box {
@@ -105,6 +94,7 @@
             padding: 15px;
             border: 1px dashed var(--dim-color);
             margin-bottom: 20px;
+            flex-shrink: 0;
         }
 
         .directive-title {
@@ -120,6 +110,8 @@
             overflow-y: auto;
             font-size: 0.85rem;
             color: var(--dim-color);
+            scrollbar-width: thin;
+            scrollbar-color: var(--dim-color) var(--terminal-bg);
         }
         
         .log-entry { margin-bottom: 5px; border-bottom: 1px solid #112211; padding-bottom: 2px; }
@@ -127,7 +119,6 @@
         .log-fail { color: var(--alert-color); }
         .log-warn { color: var(--warn-color); }
 
-        /* Right Panel: The Employee File */
         .file-card {
             background-color: #111;
             border: 1px solid var(--text-color);
@@ -135,6 +126,16 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        #file-scroll-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            min-height: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--dim-color) #111;
         }
 
         .file-header {
@@ -167,12 +168,12 @@
             font-size: 0.9rem;
         }
 
-        /* Controls */
         .controls {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin-top: auto;
+            margin-top: 20px;
+            flex-shrink: 0;
         }
 
         button {
@@ -189,22 +190,15 @@
 
         button:active { transform: translateY(2px); }
 
-        .btn-keep {
-            border-color: var(--text-color);
-            color: var(--text-color);
-        }
+        .btn-keep { border-color: var(--text-color); color: var(--text-color); }
         .btn-keep:hover { background-color: rgba(51, 255, 51, 0.1); }
 
-        .btn-fire {
-            border-color: var(--alert-color);
-            color: var(--alert-color);
-        }
+        .btn-fire { border-color: var(--alert-color); color: var(--alert-color); }
         .btn-fire:hover { background-color: rgba(255, 51, 51, 0.1); }
 
-        /* Mobile Adjustments */
         @media (max-width: 600px) {
             main { grid-template-columns: 1fr; }
-            .left-panel { display: none; } /* Hide log on mobile for space */
+            .left-panel { display: none; }
             .crt-container { height: 100vh; padding: 10px; }
             header { grid-template-columns: 1fr 1fr; gap: 5px; }
         }
@@ -215,7 +209,6 @@
             100% { opacity: 1; }
         }
 
-        /* Overlay for Day End */
         #modal-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -270,19 +263,16 @@
             font-size: 0.85rem;
             color: #aaa;
             text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
         }
-        .news-item {
-            margin-bottom: 8px;
-        }
-        .news-item strong {
-            color: var(--warn-color);
-        }
+        .news-item { margin-bottom: 8px; }
+        .news-item strong { color: var(--warn-color); }
     </style>
 </head>
 <body>
 
     <div class="crt-container">
-        <!-- Loading Screen -->
         <div id="loading-overlay">INITIALIZING CORPORATE PROTOCOLS...</div>
 
         <header>
@@ -307,47 +297,25 @@
         </header>
 
         <main>
-            <!-- Left Panel -->
             <div class="left-panel">
                 <div class="directive-box">
                     <div class="directive-title">>>> DAILY MEMO FROM MANAGEMENT</div>
                     <div id="rule-text">Connecting to database...</div>
                 </div>
-                
                 <div class="log-box" id="game-log">
                     <div class="log-entry">System Boot...</div>
                 </div>
             </div>
 
-            <!-- Right Panel -->
             <div class="file-card">
-                <div id="file-content">
+                <div id="file-scroll-area">
                     <div class="file-header" id="emp-name">WAITING...</div>
-                    
-                    <div class="data-row">
-                        <span class="data-label">POSITION:</span>
-                        <span class="data-value" id="emp-role">---</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-label">AGE:</span>
-                        <span class="data-value" id="emp-age">---</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-label">SALARY:</span>
-                        <span class="data-value" id="emp-salary">---</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-label">PERFORMANCE (0-100):</span>
-                        <span class="data-value" id="emp-perf">---</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-label">FAMILY:</span>
-                        <span class="data-value" id="emp-family">---</span>
-                    </div>
-
-                    <div class="note-section" id="emp-note">
-                        ---
-                    </div>
+                    <div class="data-row"><span class="data-label">POSITION:</span><span class="data-value" id="emp-role">---</span></div>
+                    <div class="data-row"><span class="data-label">AGE:</span><span class="data-value" id="emp-age">---</span></div>
+                    <div class="data-row"><span class="data-label">SALARY:</span><span class="data-value" id="emp-salary">---</span></div>
+                    <div class="data-row"><span class="data-label">PERFORMANCE (0-100):</span><span class="data-value" id="emp-perf">---</span></div>
+                    <div class="data-row"><span class="data-label">FAMILY:</span><span class="data-value" id="emp-family">---</span></div>
+                    <div class="note-section" id="emp-note">---</div>
                 </div>
 
                 <div class="controls">
@@ -358,7 +326,6 @@
         </main>
     </div>
 
-    <!-- Day End / Game Over Modal -->
     <div id="modal-overlay">
         <div id="modal-content">
             <h1 id="modal-title">SHIFT ENDED</h1>
@@ -368,7 +335,6 @@
     </div>
 
 <script>
-    // --- GLOBAL VARIABLES ---
     let scenarios = [];
     let dailyRules = [];
     let names = [];
@@ -388,15 +354,13 @@
         jobPerformance: 100,
         dayQueue: [], 
         customersThisDay: 6,
-        firedLog: [] // Tracks who we fired this day
+        firedLog: []
     };
 
-    // --- INITIALIZATION ---
     async function initGame() {
         const logBox = document.getElementById('game-log');
         try {
             const response = await fetch('events.json');
-            
             if (response.ok) {
                 const data = await response.json();
                 scenarios = data.scenarios || [];
@@ -404,39 +368,31 @@
                 names = data.names || ["Unknown"];
                 roles = data.roles || ["Worker"];
                 config = data.config || {};
-                newsStories = data.newsStories || { "default": "is seeking new employment." };
-                
+                newsStories = data.newsStories || { "default": ["is seeking new employment."] };
                 logBox.innerHTML += '<div class="log-entry log-success">Database Loaded. Protocols Active.</div>';
-            } else {
-                 throw new Error("HTTP error " + response.status);
-            }
-
+            } else { throw new Error("HTTP error " + response.status); }
         } catch (error) {
             console.error(error);
             document.getElementById('loading-overlay').innerText = "ERROR: LOAD FAILED";
-            logBox.innerHTML += `<div class="log-entry log-fail">CRITICAL ERROR: Could not load 'events.json'. Using Fallbacks.</div>`;
-            config = {}; 
-            dailyRules = [{ day: 1, text: "System Error. Fire anyone.", type: "free_fire" }];
+            logBox.innerHTML += `<div class="log-entry log-fail">CRITICAL ERROR: Could not load 'events.json'.</div>`;
+            config = {}; dailyRules = [{ day: 1, text: "System Error. Fire anyone.", type: "free_fire" }];
             scenarios = [{ id: "error", title: "Error", note: "Data corrupt", perfRange:[50,50], salaryRange:[50000,50000], family: "Unknown" }];
-            newsStories = { "default": "System Error: News feed unavailable." };
+            newsStories = { "default": ["System Error: News feed unavailable."] };
         } finally {
             state.money = (config.startingMoney !== undefined) ? config.startingMoney : 500;
             state.quotaTarget = (config.startingQuota !== undefined) ? config.startingQuota : 3;
             state.stability = (config.startingStability !== undefined) ? config.startingStability : 100;
             state.jobPerformance = (config.startingPerformance !== undefined) ? config.startingPerformance : 100;
-            
             document.getElementById('loading-overlay').style.display = 'none';
             initDay();
         }
     }
 
-    // --- ROSTER GENERATION SYSTEM ---
-    
     function initDay() {
         state.processedToday = 0;
         state.firedToday = 0;
         state.dayEnded = false;
-        state.firedLog = []; // Clear log
+        state.firedLog = [];
         
         let rule;
         if (dailyRules.length > 0) {
@@ -445,37 +401,41 @@
         } else {
             rule = { text: "No Directives Found.", type: "free_fire" };
         }
+
+        const logBox = document.getElementById('game-log');
+        logBox.innerHTML = '';
+        logBox.innerHTML += `<div class="log-entry">--- DAY ${state.day} STARTED ---</div>`;
         
-        // 1. Scale Day Length based on Quota
         const minCustomers = state.quotaTarget + 2;
         const cfgMax = (config.maxCustomersPerDay !== undefined) ? config.maxCustomersPerDay : 6;
         state.customersThisDay = Math.max(cfgMax, minCustomers);
         
-        // 2. Generate the Roster
         generateDailyRoster(rule, state.quotaTarget, state.customersThisDay);
 
-        // 3. UI Updates
         document.getElementById('rule-text').innerText = rule.text;
         updateUI();
-        
         loadNextEmployee();
     }
 
     function generateDailyRoster(rule, requiredMatches, totalCount) {
         state.dayQueue = [];
         
-        // Step A: Generate Mandatory Matches
-        for (let i = 0; i < requiredMatches; i++) {
-            state.dayQueue.push(generateEmployee(rule, true));
+        // --- DILEMMA ENGINE ---
+        // Instead of random fillers, we want to sometimes force a "Dilemma":
+        // Someone who matches the firing rule (Guilty) but has high stability penalty (Important).
+        
+        for (let i = 0; i < totalCount; i++) {
+            let isGuilty = false;
+            // Ensure we have enough guilties to meet quota
+            if (i < requiredMatches) isGuilty = true; 
+            else {
+                // For the rest, 30% chance to be guilty anyway (makes it easier but maybe morally harder)
+                if (Math.random() < 0.3) isGuilty = true;
+            }
+            state.dayQueue.push(generateEmployee(rule, isGuilty));
         }
 
-        // Step B: Generate Fillers
-        const fillerCount = totalCount - requiredMatches;
-        for (let i = 0; i < fillerCount; i++) {
-            state.dayQueue.push(generateEmployee(rule, false));
-        }
-
-        // Step C: Shuffle
+        // Shuffle
         for (let i = state.dayQueue.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [state.dayQueue[i], state.dayQueue[j]] = [state.dayQueue[j], state.dayQueue[i]];
@@ -485,63 +445,97 @@
     function generateEmployee(rule, forceMatch) {
         if (!scenarios || scenarios.length === 0) return { name: "Error" };
 
-        const template = scenarios[Math.floor(Math.random() * scenarios.length)];
-        
-        // Basic Stats
-        let perf = template.displayPerf ? 
-            (template.displayPerf === "N/A" ? 0 : 50) : 
-            randomInt(template.perfRange[0], template.perfRange[1]);
-        let displayPerf = template.displayPerf || perf;
-        let salary = randomInt(template.salaryRange[0], template.salaryRange[1]);
-        let age = randomInt(22, 65);
-        let family = template.family;
-        let role = (roles.length > 0) ? roles[Math.floor(Math.random() * roles.length)] : "Worker";
-        let name = (names.length > 0) ? names[Math.floor(Math.random() * names.length)] : "Unknown";
+        let validCandidateFound = false;
+        let candidate = {};
+        let safetyCounter = 0;
 
-        // --- OVERRIDE LOGIC ---
-        if (forceMatch && rule) {
-            if (rule.type === 'salary_high') {
-                salary = randomInt(rule.val + 1000, rule.val + 50000);
-            } else if (rule.type === 'perf_low') {
-                perf = randomInt(0, rule.val - 1);
-                displayPerf = perf;
-            } else if (rule.type === 'family_single') {
-                family = "Single";
-            } else if (rule.type === 'age_high') {
-                age = randomInt(rule.val + 1, 65);
-            } else if (rule.type === 'role_keyword') {
-                 const matchingRole = roles.find(r => r.includes(rule.val));
-                 if (matchingRole) role = matchingRole;
+        // Retry loop to prevent text/stat collisions
+        while (!validCandidateFound && safetyCounter < 50) {
+            safetyCounter++;
+            const template = scenarios[Math.floor(Math.random() * scenarios.length)];
+            
+            // Generate Base Stats
+            let perf = template.displayPerf ? (template.displayPerf === "N/A" ? 0 : 50) : randomInt(template.perfRange[0], template.perfRange[1]);
+            let displayPerf = template.displayPerf || perf;
+            let salary = randomInt(template.salaryRange[0], template.salaryRange[1]);
+            let age = randomInt(template.minAge || 22, template.maxAge || 65); // Respect constraint
+            let family = template.family;
+            
+            // Determine if we modify this candidate to fit the rule
+            if (forceMatch && rule) {
+                // Apply modifications based on rule type
+                if (rule.type === 'salary_high') {
+                    salary = randomInt(rule.val + 1000, rule.val + 50000);
+                } else if (rule.type === 'perf_low') {
+                    perf = randomInt(0, rule.val - 1);
+                    displayPerf = perf;
+                } else if (rule.type === 'family_single') {
+                    family = "Single";
+                } else if (rule.type === 'age_high') {
+                    age = randomInt(rule.val + 1, 65);
+                }
+            }
+
+            // --- COLLISION CHECK ---
+            let collision = false;
+            
+            // Check Age Constraints
+            if (template.minAge && age < template.minAge) collision = true;
+            if (template.maxAge && age > template.maxAge) collision = true;
+            
+            // Check Perf Constraints
+            if (template.minPerf && perf < template.minPerf) collision = true;
+            if (template.maxPerf && perf > template.maxPerf) collision = true;
+
+            // Check if scenario forces specific values that contradict our forced stats
+            // e.g. "The Intern" cannot be 60 years old
+            if (forceMatch && rule.type === 'age_high' && template.maxAge && template.maxAge < rule.val) collision = true;
+            if (forceMatch && rule.type === 'perf_low' && template.minPerf && template.minPerf > rule.val) collision = true;
+
+            if (!collision) {
+                validCandidateFound = true;
+                let role = (roles.length > 0) ? roles[Math.floor(Math.random() * roles.length)] : "Worker";
+                let name = (names.length > 0) ? names[Math.floor(Math.random() * names.length)] : "Unknown";
+                
+                // Override role if rule demands it
+                if (forceMatch && rule.type === 'role_keyword') {
+                    const matchingRole = roles.find(r => r.includes(rule.val));
+                    if (matchingRole) role = matchingRole;
+                }
+
+                candidate = {
+                    name: name,
+                    role: role,
+                    age: age,
+                    salary: salary,
+                    perf: perf,
+                    displayPerf: displayPerf,
+                    family: family,
+                    note: template.note,
+                    scenarioId: template.id,
+                    isBribe: template.isBribe || false,
+                    stabilityPenalty: template.stabilityPenalty || 0
+                };
             }
         }
+        
+        if (!validCandidateFound) {
+            // Fallback safe candidate
+            return { name: "John Doe", role: "Worker", age: 30, salary: 50000, perf: 50, displayPerf: 50, family: "Single", note: "Standard Employee", stabilityPenalty: 0, scenarioId: "average_joe" };
+        }
 
-        return {
-            name: name,
-            role: role,
-            age: age,
-            salary: salary,
-            perf: perf,
-            displayPerf: displayPerf,
-            family: family,
-            note: template.note,
-            scenarioId: template.id,
-            isBribe: template.isBribe || false,
-            stabilityPenalty: template.stabilityPenalty || 0
-        };
+        return candidate;
     }
 
     function randomInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1) + min);
     }
 
-    // --- GAMEPLAY LOOP ---
-
     function loadNextEmployee() {
         if (state.dayQueue.length === 0) {
             endDay();
             return;
         }
-
         state.currentEmployee = state.dayQueue.pop();
         renderEmployee(state.currentEmployee);
         state.processedToday++;
@@ -573,7 +567,6 @@
         let logMsg = "";
         let logClass = "";
 
-        // 1. Check Compliance
         let matchesFireCriteria = false;
         if (rule.type === 'perf_low' && emp.perf < rule.val) matchesFireCriteria = true;
         else if (rule.type === 'salary_high' && emp.salary > rule.val) matchesFireCriteria = true;
@@ -586,7 +579,6 @@
         if (action === 'FIRE' && matchesFireCriteria) followedOrders = true;
         if (action === 'KEEP' && !matchesFireCriteria) followedOrders = true;
 
-        // 2. Apply Effects
         if (followedOrders) {
             state.jobPerformance = Math.min(100, state.jobPerformance + 5);
             logClass = 'log-success';
@@ -597,9 +589,7 @@
 
         if (action === 'FIRE') {
             state.firedToday++;
-            // LOG THIS FIRE FOR NEWS LATER
             state.firedLog.push(emp);
-
             if (emp.stabilityPenalty > 0) {
                 state.stability -= emp.stabilityPenalty;
                 logMsg = `TERMINATED: ${emp.name}. WARNING: Stability Impact (-${emp.stabilityPenalty}%)`;
@@ -617,15 +607,8 @@
             }
         }
 
-        // 3. Immediate Game Over Checks
-        if (state.jobPerformance <= 0) {
-            triggerGameOver("TERMINATED FOR INCOMPETENCE. Performance reached 0%.");
-            return;
-        }
-        if (state.stability < 33) {
-            triggerGameOver("COMPANY COLLAPSED. Stability Critical (33%).");
-            return;
-        }
+        if (state.jobPerformance <= 0) { triggerGameOver("TERMINATED FOR INCOMPETENCE. Performance reached 0%."); return; }
+        if (state.stability < 33) { triggerGameOver("COMPANY COLLAPSED. Stability Critical (33%)."); return; }
 
         updateUI();
         log(logMsg, logClass);
@@ -634,19 +617,14 @@
 
     function updateUI() {
         document.getElementById('money-display').innerText = "$" + state.money;
-        
         const stabEl = document.getElementById('stability-display');
         stabEl.innerText = state.stability + "%";
         document.getElementById('stability-bar').style.width = Math.max(0, state.stability) + "%";
-        if(state.stability < 40) stabEl.className = "danger-text";
-        else stabEl.className = "";
-
+        if(state.stability < 40) stabEl.className = "danger-text"; else stabEl.className = "";
         const perfEl = document.getElementById('perf-display');
         perfEl.innerText = state.jobPerformance + "%";
         document.getElementById('perf-bar').style.width = Math.max(0, state.jobPerformance) + "%";
-        if(state.jobPerformance < 30) perfEl.className = "danger-text";
-        else perfEl.className = "";
-
+        if(state.jobPerformance < 30) perfEl.className = "danger-text"; else perfEl.className = "";
         document.getElementById('day-quota-display').innerText = `${state.day} / ${state.firedToday}-${state.quotaTarget}`;
     }
 
@@ -660,17 +638,14 @@
     }
 
     function getNewsUpdates(firedList) {
-        if (!firedList || firedList.length === 0) {
-            return "<div class='news-item'>No terminations filed today. The streets are quiet.</div>";
-        }
-
+        if (!firedList || firedList.length === 0) return "<div class='news-item'>No terminations filed today. The streets are quiet.</div>";
         let html = "";
-        // Show max 3 news items to keep it clean
         const maxItems = Math.min(firedList.length, 3);
-        
         for (let i = 0; i < maxItems; i++) {
             const emp = firedList[i];
-            const story = newsStories[emp.scenarioId] || newsStories["default"];
+            const stories = newsStories[emp.scenarioId] || newsStories["default"];
+            // Pick random story from array
+            const story = Array.isArray(stories) ? stories[Math.floor(Math.random() * stories.length)] : stories;
             html += `<div class='news-item'><strong>> UPDATE (${emp.name}):</strong> ${story}</div>`;
         }
         return html;
@@ -687,35 +662,26 @@
         const baseWage = (config.baseDailyWage !== undefined) ? config.baseDailyWage : 120;
         const rent = (config.rentCost !== undefined) ? config.rentCost : 100;
         const food = (config.foodCost !== undefined) ? config.foodCost : 50;
-
         let performanceBonus = 0;
-        if (state.jobPerformance > 50) {
-            performanceBonus = (state.jobPerformance - 50) * 2;
-        }
+        if (state.jobPerformance > 50) { performanceBonus = (state.jobPerformance - 50) * 2; }
         let dailyWage = baseWage + performanceBonus;
-
         let expenses = rent + food;
         let quotaPenalty = 0;
         let quotaMsg = `<span style="color:#3f3">MET</span>`;
-        
         if (state.firedToday < state.quotaTarget) {
             quotaPenalty = 100; 
             state.jobPerformance = Math.max(0, state.jobPerformance - 30);
             quotaMsg = `<span style="color:#f33">MISSED (Perf -30%, -$100 Fine)</span>`;
         }
-
         if (state.jobPerformance <= 0) {
             modal.style.display = 'none';
             triggerGameOver("TERMINATED FOR INCOMPETENCE. Performance hit 0% after penalties.");
             return;
         }
-
         let netChange = dailyWage - expenses - quotaPenalty;
         state.money += netChange;
 
-        // GENERATE NEWS
         const newsHTML = getNewsUpdates(state.firedLog);
-
         title.innerText = `SHIFT ${state.day} REPORT`;
         summary.innerHTML = `
             <div style="text-align:left; margin: 0 auto; display:inline-block;">
@@ -730,11 +696,7 @@
             </div>
             <br><br>
             <h2>TOTAL FUNDS: $${state.money}</h2>
-            
-            <div class="news-ticker">
-                <div style="color:var(--text-color); margin-bottom:10px;">--- LOCAL NEWS FEED ---</div>
-                ${newsHTML}
-            </div>
+            <div class="news-ticker"><div style="color:var(--text-color); margin-bottom:10px;">--- LOCAL NEWS FEED ---</div>${newsHTML}</div>
         `;
         
         if (state.money < 0) {
@@ -757,18 +719,15 @@
         const title = document.getElementById('modal-title');
         const summary = document.getElementById('modal-summary');
         const btn = document.getElementById('next-day-btn');
-        
         modal.style.display = 'flex';
         title.innerText = "GAME OVER";
         title.style.color = "red";
         summary.innerHTML = `<h3 style="color:red">${reason}</h3><br>You have been removed from the building.`;
-        
         btn.innerText = "RESTART SYSTEM";
         btn.onclick = () => location.reload();
     }
 
     initGame();
-
 </script>
 </body>
 </html>
