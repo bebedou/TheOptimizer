@@ -278,12 +278,12 @@
             </div>
             <div class="stat-box">
                 <span>PERFORMANCE</span>
-                <strong id="perf-display">75%</strong>
+                <strong id="perf-display">100%</strong>
                 <div class="stat-bar"><div id="perf-bar" class="stat-fill"></div></div>
             </div>
             <div class="stat-box">
                 <span>FUNDS</span>
-                <strong id="money-display">$0</strong>
+                <strong id="money-display">$500</strong>
             </div>
             <div class="stat-box">
                 <span>DAY / QUOTA</span>
@@ -369,7 +369,7 @@
         currentEmployee: null,
         dayEnded: false,
         stability: 100,
-        jobPerformance: 75
+        jobPerformance: 100
     };
 
     // --- INITIALIZATION ---
@@ -377,36 +377,45 @@
         const logBox = document.getElementById('game-log');
         try {
             const response = await fetch('events.json');
-            if (!response.ok) throw new Error("HTTP error " + response.status);
             
-            const data = await response.json();
-            
-            scenarios = data.scenarios;
-            dailyRules = data.dailyRules;
-            names = data.names;
-            roles = data.roles;
-            config = data.config;
-
-            // Initialize State
-            state.money = config.startingMoney;
-            state.quotaTarget = config.startingQuota;
-            state.stability = config.startingStability;
-            state.jobPerformance = config.startingPerformance;
-            
-            document.getElementById('loading-overlay').style.display = 'none';
-            logBox.innerHTML += '<div class="log-entry log-success">Database Loaded. Protocols Active.</div>';
-
-            initDay();
+            // Safety check if file is missing/wrong
+            if (response.ok) {
+                const data = await response.json();
+                scenarios = data.scenarios || [];
+                dailyRules = data.dailyRules || [];
+                names = data.names || ["Unknown"];
+                roles = data.roles || ["Worker"];
+                config = data.config || {};
+                logBox.innerHTML += '<div class="log-entry log-success">Database Loaded. Protocols Active.</div>';
+            } else {
+                 throw new Error("HTTP error " + response.status);
+            }
 
         } catch (error) {
             console.error(error);
             document.getElementById('loading-overlay').innerText = "ERROR: LOAD FAILED";
-            logBox.innerHTML += `<div class="log-entry log-fail">CRITICAL ERROR: Could not load 'events.json'.</div>`;
+            logBox.innerHTML += `<div class="log-entry log-fail">CRITICAL ERROR: Could not load 'events.json'. Using Fallbacks.</div>`;
+            // Fallback empty data to prevent crash
+            config = {}; 
+            dailyRules = [{ day: 1, text: "System Error. Fire anyone.", type: "free_fire" }];
+            scenarios = [{ id: "error", title: "Error", note: "Data corrupt", perfRange:[50,50], salaryRange:[50000,50000], family: "Unknown" }];
+        } finally {
+             // Initialize State with Safe Defaults (Requested by User)
+            state.money = (config.startingMoney !== undefined) ? config.startingMoney : 500;
+            state.quotaTarget = (config.startingQuota !== undefined) ? config.startingQuota : 3;
+            state.stability = (config.startingStability !== undefined) ? config.startingStability : 100;
+            state.jobPerformance = (config.startingPerformance !== undefined) ? config.startingPerformance : 100;
+            
+            document.getElementById('loading-overlay').style.display = 'none';
+            initDay();
         }
     }
 
     // --- GENERATORS ---
     function generateEmployee() {
+        // Safety check if scenarios empty
+        if (!scenarios || scenarios.length === 0) return { name: "Error", role: "Error", age: 0, salary: 0, perf: 0, displayPerf: 0, family: "None", note: "No Data", stabilityPenalty: 0 };
+
         const template = scenarios[Math.floor(Math.random() * scenarios.length)];
         
         const perf = template.displayPerf ? 
@@ -414,10 +423,12 @@
             randomInt(template.perfRange[0], template.perfRange[1]);
             
         const salary = randomInt(template.salaryRange[0], template.salaryRange[1]);
+        const nList = (names.length > 0) ? names : ["Unknown"];
+        const rList = (roles.length > 0) ? roles : ["Worker"];
 
         return {
-            name: names[Math.floor(Math.random() * names.length)],
-            role: roles[Math.floor(Math.random() * roles.length)],
+            name: nList[Math.floor(Math.random() * nList.length)],
+            role: rList[Math.floor(Math.random() * rList.length)],
             age: randomInt(22, 65),
             salary: salary,
             perf: perf,
@@ -441,17 +452,27 @@
         state.firedToday = 0;
         state.dayEnded = false;
         
-        const ruleIndex = Math.min(state.day - 1, dailyRules.length - 1);
-        const rule = dailyRules[ruleIndex];
+        let rule;
+        if (dailyRules.length > 0) {
+            const ruleIndex = Math.min(state.day - 1, dailyRules.length - 1);
+            rule = dailyRules[ruleIndex];
+        } else {
+            rule = { text: "No Directives Found.", type: "free_fire" };
+        }
         
         document.getElementById('rule-text').innerText = rule.text;
         updateUI();
         
-        loadNextEmployee();
+        // Ensure max customers has a default
+        const maxCust = (config.maxCustomersPerDay !== undefined) ? config.maxCustomersPerDay : 5;
+        if (state.processedToday < maxCust) {
+             loadNextEmployee();
+        }
     }
 
     function loadNextEmployee() {
-        if (state.processedToday >= config.maxCustomersPerDay) {
+        const maxCust = (config.maxCustomersPerDay !== undefined) ? config.maxCustomersPerDay : 5;
+        if (state.processedToday >= maxCust) {
             endDay();
             return;
         }
@@ -475,8 +496,14 @@
         if (state.dayEnded) return;
 
         const emp = state.currentEmployee;
-        const ruleIndex = Math.min(state.day - 1, dailyRules.length - 1);
-        const rule = dailyRules[ruleIndex];
+        
+        let rule;
+        if (dailyRules.length > 0) {
+             const ruleIndex = Math.min(state.day - 1, dailyRules.length - 1);
+             rule = dailyRules[ruleIndex];
+        } else {
+             rule = { type: "free_fire" };
+        }
         
         let logMsg = "";
         let logClass = "";
@@ -546,14 +573,14 @@
         // Stability
         const stabEl = document.getElementById('stability-display');
         stabEl.innerText = state.stability + "%";
-        document.getElementById('stability-bar').style.width = state.stability + "%";
+        document.getElementById('stability-bar').style.width = Math.max(0, state.stability) + "%";
         if(state.stability < 40) stabEl.className = "danger-text";
         else stabEl.className = "";
 
         // Performance
         const perfEl = document.getElementById('perf-display');
         perfEl.innerText = state.jobPerformance + "%";
-        document.getElementById('perf-bar').style.width = state.jobPerformance + "%";
+        document.getElementById('perf-bar').style.width = Math.max(0, state.jobPerformance) + "%";
         if(state.jobPerformance < 30) perfEl.className = "danger-text";
         else perfEl.className = "";
 
@@ -578,22 +605,31 @@
         
         modal.style.display = 'flex';
 
+        // Defaults to prevent NaN
+        const baseWage = (config.baseDailyWage !== undefined) ? config.baseDailyWage : 120;
+        const rent = (config.rentCost !== undefined) ? config.rentCost : 100;
+        const food = (config.foodCost !== undefined) ? config.foodCost : 50;
+
         // 1. Calculate Wage based on Performance
         let performanceBonus = 0;
         if (state.jobPerformance > 50) {
             performanceBonus = (state.jobPerformance - 50) * 2;
         }
-        let dailyWage = config.baseDailyWage + performanceBonus;
+        let dailyWage = baseWage + performanceBonus;
 
         // 2. Expenses
-        let expenses = config.rentCost + config.foodCost;
+        let expenses = rent + food;
         
         // 3. Quota Penalty (if missed)
         let quotaPenalty = 0;
         let quotaMsg = `<span style="color:#3f3">MET</span>`;
         if (state.firedToday < state.quotaTarget) {
             quotaPenalty = 100; // Flat fine for missing quota
-            quotaMsg = `<span style="color:#f33">MISSED (-$100 Fine)</span>`;
+            
+            // --- BIG PERFORMANCE PENALTY APPLIED HERE ---
+            state.jobPerformance = Math.max(0, state.jobPerformance - 30);
+            
+            quotaMsg = `<span style="color:#f33">MISSED (Perf -30%, -$100 Fine)</span>`;
         }
 
         let netChange = dailyWage - expenses - quotaPenalty;
@@ -604,7 +640,7 @@
             <div style="text-align:left; margin: 0 auto; display:inline-block;">
             Job Performance: ${state.jobPerformance}%<br>
             ---------------------------<br>
-            Base Wage: +$${config.baseDailyWage}<br>
+            Base Wage: +$${baseWage}<br>
             Perf. Bonus: +$${performanceBonus}<br>
             Rent & Food: -$${expenses}<br>
             Quota Status: ${quotaMsg}<br>
