@@ -195,6 +195,22 @@
 
         .btn-fire { border-color: var(--alert-color); color: var(--alert-color); }
         .btn-fire:hover { background-color: rgba(255, 51, 51, 0.1); }
+        
+        /* Modal Action Buttons */
+        .modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .btn-upgrade {
+            font-size: 0.9rem;
+            padding: 10px;
+            border-color: var(--warn-color);
+            color: var(--warn-color);
+        }
+        .btn-upgrade:hover { background-color: rgba(255, 170, 51, 0.1); }
+        .btn-upgrade:disabled { opacity: 0.3; cursor: not-allowed; border-color: #555; color: #555; }
 
         @media (max-width: 600px) {
             main { grid-template-columns: 1fr; }
@@ -223,13 +239,16 @@
             text-align: center;
             max-width: 600px;
             border: 2px solid var(--text-color);
-            padding: 40px;
+            padding: 30px;
             background-color: #000;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         #next-day-btn {
-            margin-top: 20px;
+            margin-top: 10px;
             border-color: white;
             color: white;
+            width: 100%;
         }
         #loading-overlay {
             position: absolute;
@@ -257,17 +276,23 @@
         }
 
         .news-ticker {
-            margin-top: 20px;
+            margin-top: 15px;
             border-top: 1px dashed #555;
-            padding-top: 15px;
+            padding-top: 10px;
             font-size: 0.85rem;
             color: #aaa;
             text-align: left;
-            max-height: 200px;
+            max-height: 150px;
             overflow-y: auto;
         }
         .news-item { margin-bottom: 8px; }
         .news-item strong { color: var(--warn-color); }
+        
+        .balance-display {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            color: var(--text-color);
+        }
     </style>
 </head>
 <body>
@@ -329,8 +354,9 @@
     <div id="modal-overlay">
         <div id="modal-content">
             <h1 id="modal-title">SHIFT ENDED</h1>
-            <p id="modal-summary">Summary text goes here.</p>
-            <button id="next-day-btn" onclick="startNextDay()">START NEXT SHIFT</button>
+            <div id="modal-body-content">
+                <!-- Content injected via JS -->
+            </div>
         </div>
     </div>
 
@@ -419,23 +445,12 @@
 
     function generateDailyRoster(rule, requiredMatches, totalCount) {
         state.dayQueue = [];
-        
-        // --- DILEMMA ENGINE ---
-        // Instead of random fillers, we want to sometimes force a "Dilemma":
-        // Someone who matches the firing rule (Guilty) but has high stability penalty (Important).
-        
         for (let i = 0; i < totalCount; i++) {
             let isGuilty = false;
-            // Ensure we have enough guilties to meet quota
             if (i < requiredMatches) isGuilty = true; 
-            else {
-                // For the rest, 30% chance to be guilty anyway (makes it easier but maybe morally harder)
-                if (Math.random() < 0.3) isGuilty = true;
-            }
+            else if (Math.random() < 0.3) isGuilty = true;
             state.dayQueue.push(generateEmployee(rule, isGuilty));
         }
-
-        // Shuffle
         for (let i = state.dayQueue.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [state.dayQueue[i], state.dayQueue[j]] = [state.dayQueue[j], state.dayQueue[i]];
@@ -449,21 +464,17 @@
         let candidate = {};
         let safetyCounter = 0;
 
-        // Retry loop to prevent text/stat collisions
         while (!validCandidateFound && safetyCounter < 50) {
             safetyCounter++;
             const template = scenarios[Math.floor(Math.random() * scenarios.length)];
             
-            // Generate Base Stats
             let perf = template.displayPerf ? (template.displayPerf === "N/A" ? 0 : 50) : randomInt(template.perfRange[0], template.perfRange[1]);
             let displayPerf = template.displayPerf || perf;
             let salary = randomInt(template.salaryRange[0], template.salaryRange[1]);
-            let age = randomInt(template.minAge || 22, template.maxAge || 65); // Respect constraint
+            let age = randomInt(template.minAge || 22, template.maxAge || 65);
             let family = template.family;
             
-            // Determine if we modify this candidate to fit the rule
             if (forceMatch && rule) {
-                // Apply modifications based on rule type
                 if (rule.type === 'salary_high') {
                     salary = randomInt(rule.val + 1000, rule.val + 50000);
                 } else if (rule.type === 'perf_low') {
@@ -476,19 +487,11 @@
                 }
             }
 
-            // --- COLLISION CHECK ---
             let collision = false;
-            
-            // Check Age Constraints
             if (template.minAge && age < template.minAge) collision = true;
             if (template.maxAge && age > template.maxAge) collision = true;
-            
-            // Check Perf Constraints
             if (template.minPerf && perf < template.minPerf) collision = true;
             if (template.maxPerf && perf > template.maxPerf) collision = true;
-
-            // Check if scenario forces specific values that contradict our forced stats
-            // e.g. "The Intern" cannot be 60 years old
             if (forceMatch && rule.type === 'age_high' && template.maxAge && template.maxAge < rule.val) collision = true;
             if (forceMatch && rule.type === 'perf_low' && template.minPerf && template.minPerf > rule.val) collision = true;
 
@@ -496,46 +499,26 @@
                 validCandidateFound = true;
                 let role = (roles.length > 0) ? roles[Math.floor(Math.random() * roles.length)] : "Worker";
                 let name = (names.length > 0) ? names[Math.floor(Math.random() * names.length)] : "Unknown";
-                
-                // Override role if rule demands it
                 if (forceMatch && rule.type === 'role_keyword') {
                     const matchingRole = roles.find(r => r.includes(rule.val));
                     if (matchingRole) role = matchingRole;
                 }
-
                 candidate = {
-                    name: name,
-                    role: role,
-                    age: age,
-                    salary: salary,
-                    perf: perf,
-                    displayPerf: displayPerf,
-                    family: family,
-                    note: template.note,
-                    scenarioId: template.id,
-                    isBribe: template.isBribe || false,
+                    name: name, role: role, age: age, salary: salary, perf: perf, displayPerf: displayPerf,
+                    family: family, note: template.note, scenarioId: template.id, isBribe: template.isBribe || false,
                     stabilityPenalty: template.stabilityPenalty || 0
                 };
             }
         }
         
-        if (!validCandidateFound) {
-            // Fallback safe candidate
-            return { name: "John Doe", role: "Worker", age: 30, salary: 50000, perf: 50, displayPerf: 50, family: "Single", note: "Standard Employee", stabilityPenalty: 0, scenarioId: "average_joe" };
-        }
-
+        if (!validCandidateFound) return { name: "John Doe", role: "Worker", age: 30, salary: 50000, perf: 50, displayPerf: 50, family: "Single", note: "Standard Employee", stabilityPenalty: 0, scenarioId: "average_joe" };
         return candidate;
     }
 
-    function randomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1) + min);
-    }
+    function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
 
     function loadNextEmployee() {
-        if (state.dayQueue.length === 0) {
-            endDay();
-            return;
-        }
+        if (state.dayQueue.length === 0) { endDay(); return; }
         state.currentEmployee = state.dayQueue.pop();
         renderEmployee(state.currentEmployee);
         state.processedToday++;
@@ -607,6 +590,12 @@
             }
         }
 
+        // Logic update: End day immediately if quota met
+        if (state.firedToday >= state.quotaTarget) {
+            endDay();
+            return;
+        }
+
         if (state.jobPerformance <= 0) { triggerGameOver("TERMINATED FOR INCOMPETENCE. Performance reached 0%."); return; }
         if (state.stability < 33) { triggerGameOver("COMPANY COLLAPSED. Stability Critical (33%)."); return; }
 
@@ -644,7 +633,6 @@
         for (let i = 0; i < maxItems; i++) {
             const emp = firedList[i];
             const stories = newsStories[emp.scenarioId] || newsStories["default"];
-            // Pick random story from array
             const story = Array.isArray(stories) ? stories[Math.floor(Math.random() * stories.length)] : stories;
             html += `<div class='news-item'><strong>> UPDATE (${emp.name}):</strong> ${story}</div>`;
         }
@@ -654,14 +642,14 @@
     function endDay() {
         state.dayEnded = true;
         const modal = document.getElementById('modal-overlay');
-        const title = document.getElementById('modal-title');
-        const summary = document.getElementById('modal-summary');
+        const bodyContent = document.getElementById('modal-body-content');
         
         modal.style.display = 'flex';
 
-        const baseWage = (config.baseDailyWage !== undefined) ? config.baseDailyWage : 120;
-        const rent = (config.rentCost !== undefined) ? config.rentCost : 100;
-        const food = (config.foodCost !== undefined) ? config.foodCost : 50;
+        const baseWage = config.baseDailyWage || 150;
+        const rent = config.rentCost || 80;
+        const food = config.foodCost || 40;
+        
         let performanceBonus = 0;
         if (state.jobPerformance > 50) { performanceBonus = (state.jobPerformance - 50) * 2; }
         let dailyWage = baseWage + performanceBonus;
@@ -682,28 +670,109 @@
         state.money += netChange;
 
         const newsHTML = getNewsUpdates(state.firedLog);
-        title.innerText = `SHIFT ${state.day} REPORT`;
-        summary.innerHTML = `
-            <div style="text-align:left; margin: 0 auto; display:inline-block;">
-            Job Performance: ${state.jobPerformance}%<br>
-            ---------------------------<br>
-            Base Wage: +$${baseWage}<br>
-            Perf. Bonus: +$${performanceBonus}<br>
-            Rent & Food: -$${expenses}<br>
-            Quota Status: ${quotaMsg}<br>
-            ---------------------------<br>
-            <strong>Net Profit: $${netChange}</strong><br>
-            </div>
-            <br><br>
-            <h2>TOTAL FUNDS: $${state.money}</h2>
-            <div class="news-ticker"><div style="color:var(--text-color); margin-bottom:10px;">--- LOCAL NEWS FEED ---</div>${newsHTML}</div>
-        `;
+        
+        // --- RENDER MODAL WITH UPGRADE BUTTONS ---
+        renderEndDayModal(baseWage, performanceBonus, expenses, quotaMsg, netChange, newsHTML);
         
         if (state.money < 0) {
             document.getElementById('next-day-btn').innerText = "GAME OVER";
             document.getElementById('next-day-btn').onclick = () => location.reload();
-            summary.innerHTML += "<br><span style='color:red'>YOU HAVE GONE BANKRUPT. EVICTED.</span>";
+            bodyContent.innerHTML += "<br><span style='color:red'>YOU HAVE GONE BANKRUPT. EVICTED.</span>";
         }
+    }
+
+    function renderEndDayModal(baseWage, perfBonus, expenses, quotaMsg, netChange, newsHTML) {
+        const bodyContent = document.getElementById('modal-body-content');
+        const stabCost = config.stabilityRestorationCost || 150;
+        const stabVal = config.stabilityRestorationValue || 15;
+        const perfCost = config.performanceRestorationCost || 150;
+        const perfVal = config.performanceRestorationValue || 15;
+
+        const canBuyStab = state.money >= stabCost && state.stability < 100;
+        const canBuyPerf = state.money >= perfCost && state.jobPerformance < 100;
+
+        bodyContent.innerHTML = `
+            <div style="text-align:left; margin: 0 auto; display:inline-block;">
+                Job Performance: ${state.jobPerformance}%<br>
+                ---------------------------<br>
+                Base Wage: +$${baseWage}<br>
+                Perf. Bonus: +$${perfBonus}<br>
+                Rent & Food: -$${expenses}<br>
+                Quota Status: ${quotaMsg}<br>
+                ---------------------------<br>
+                <strong>Net Profit: $${netChange}</strong><br>
+            </div>
+            
+            <h2 class="balance-display">TOTAL FUNDS: $${state.money}</h2>
+            
+            <div style="border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;">
+                <div style="color: #888; margin-bottom: 5px;">MANAGEMENT ACTIONS</div>
+                <div class="modal-actions">
+                    <button class="btn-upgrade" 
+                        onclick="buyUpgrade('stability')" 
+                        ${!canBuyStab ? 'disabled' : ''}>
+                        HOST PIZZA PARTY<br>
+                        <small>Cost: $${stabCost} | +${stabVal}% Stability</small>
+                    </button>
+                    <button class="btn-upgrade" 
+                        onclick="buyUpgrade('performance')" 
+                        ${!canBuyPerf ? 'disabled' : ''}>
+                        HIRE CONSULTANT<br>
+                        <small>Cost: $${perfCost} | +${perfVal}% Performance</small>
+                    </button>
+                </div>
+            </div>
+
+            <div class="news-ticker"><div style="color:var(--text-color); margin-bottom:10px;">--- LOCAL NEWS FEED ---</div>${newsHTML}</div>
+            
+            <button id="next-day-btn" onclick="startNextDay()">START NEXT SHIFT</button>
+        `;
+    }
+
+    function buyUpgrade(type) {
+        const stabCost = config.stabilityRestorationCost || 150;
+        const stabVal = config.stabilityRestorationValue || 15;
+        const perfCost = config.performanceRestorationCost || 150;
+        const perfVal = config.performanceRestorationValue || 15;
+        
+        if (type === 'stability' && state.money >= stabCost) {
+            state.money -= stabCost;
+            state.stability = Math.min(100, state.stability + stabVal);
+        } else if (type === 'performance' && state.money >= perfCost) {
+            state.money -= perfCost;
+            state.jobPerformance = Math.min(100, state.jobPerformance + perfVal);
+        }
+        
+        // Re-render modal to update buttons and money
+        // We need to pass dummy values for the day summary since that hasn't changed
+        // But the total funds and buttons state needs update. 
+        // A cleaner way is to re-call renderEndDayModal with current state values, 
+        // but we need the original day summary data. 
+        // Simplified approach: just re-trigger endDay logic logic visual part? 
+        // Easier: Re-call renderEndDayModal with preserved day stats or just update DOM directly. 
+        // Let's just update the specific elements if they existed, but simpler to re-render the block.
+        // We'll approximate the display update by just re-calculating the static parts for display or storing them in a temp var.
+        // Actually, let's just update the DOM elements directly for this MVP.
+        
+        // Update money display
+        const balanceDisplay = document.querySelector('.balance-display');
+        if(balanceDisplay) balanceDisplay.innerText = `TOTAL FUNDS: $${state.money}`;
+        
+        // Update buttons state
+        const stabBtn = document.querySelectorAll('.btn-upgrade')[0];
+        const perfBtn = document.querySelectorAll('.btn-upgrade')[1];
+        
+        if(stabBtn) {
+            const canBuy = state.money >= stabCost && state.stability < 100;
+            stabBtn.disabled = !canBuy;
+        }
+        if(perfBtn) {
+            const canBuy = state.money >= perfCost && state.jobPerformance < 100;
+            perfBtn.disabled = !canBuy;
+        }
+        
+        // Update header UI in background too so user sees bar go up
+        updateUI();
     }
 
     function startNextDay() {
@@ -717,14 +786,15 @@
         state.dayEnded = true;
         const modal = document.getElementById('modal-overlay');
         const title = document.getElementById('modal-title');
-        const summary = document.getElementById('modal-summary');
-        const btn = document.getElementById('next-day-btn');
+        const bodyContent = document.getElementById('modal-body-content');
         modal.style.display = 'flex';
         title.innerText = "GAME OVER";
         title.style.color = "red";
-        summary.innerHTML = `<h3 style="color:red">${reason}</h3><br>You have been removed from the building.`;
-        btn.innerText = "RESTART SYSTEM";
-        btn.onclick = () => location.reload();
+        bodyContent.innerHTML = `
+            <h3 style="color:red">${reason}</h3><br>
+            <p>You have been removed from the building.</p>
+            <button id="next-day-btn" onclick="location.reload()">RESTART SYSTEM</button>
+        `;
     }
 
     initGame();

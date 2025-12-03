@@ -1,12 +1,16 @@
 {
   "config": {
-    "startingMoney": 500,
+    "startingMoney": 600,
     "startingStability": 100,
     "startingPerformance": 100,
-    "baseDailyWage": 120,
-    "rentCost": 100,
-    "foodCost": 50,
-    "maxCustomersPerDay": 6
+    "baseDailyWage": 150,
+    "rentCost": 80,
+    "foodCost": 40,
+    "maxCustomersPerDay": 8,
+    "stabilityRestorationCost": 150,
+    "stabilityRestorationValue": 15,
+    "performanceRestorationCost": 150,
+    "performanceRestorationValue": 15
   },
   "names": [
     "J. Smith", "A. Doe", "M. Chen", "K. Ivanova", "B. Obama", 
@@ -79,7 +83,7 @@
       "salaryRange": [50000, 70000],
       "note": "Single-handedly managing the Q3 project. Vital to the department.",
       "family": "Married, 1 Kid",
-      "stabilityPenalty": 25
+      "stabilityPenalty": 20
     },
     {
       "id": "sad_story",
@@ -88,7 +92,7 @@
       "salaryRange": [40000, 50000],
       "note": "Performance dropped recently. HR Note: Spouse diagnosed with cancer, they need the insurance.",
       "family": "Married, Sick Spouse",
-      "stabilityPenalty": 10
+      "stabilityPenalty": 5
     },
     {
       "id": "nepotism",
@@ -98,7 +102,7 @@
       "salaryRange": [90000, 90000],
       "note": "CEO's Nephew. DO NOT TOUCH. If you value your job, keep him.",
       "family": "Single (Rich)",
-      "stabilityPenalty": 40
+      "stabilityPenalty": 35
     },
     {
       "id": "retirement",
@@ -108,7 +112,7 @@
       "note": "Has been here 30 years. Salary is very high compared to market rate. Retirement in 6 months.",
       "family": "Widowed",
       "minAge": 55,
-      "stabilityPenalty": 20
+      "stabilityPenalty": 15
     },
     {
       "id": "redundancy",
@@ -136,7 +140,7 @@
       "salaryRange": [55000, 60000],
       "note": "High performer, but was seen distributing Union flyers in the breakroom.",
       "family": "Married, 3 Kids",
-      "stabilityPenalty": 15
+      "stabilityPenalty": 10
     },
     {
       "id": "new_hire",
@@ -183,7 +187,7 @@
       "salaryRange": [75000, 80000],
       "note": "Excellent work, but asked too many questions about the 'Waste Disposal' account.",
       "family": "Married",
-      "stabilityPenalty": 20
+      "stabilityPenalty": 15
     },
     {
       "id": "remote_lie",
@@ -237,7 +241,7 @@
       "salaryRange": [50000, 50000],
       "note": "Terrible at the actual job, but organizes birthday parties and brings donuts. Everyone loves them.",
       "family": "Married",
-      "stabilityPenalty": 15
+      "stabilityPenalty": 10
     },
     {
       "id": "idea_guy",
@@ -255,7 +259,7 @@
       "salaryRange": [60000, 60000],
       "note": "HR Note: Do not fire. They are on the cover of the 'Diversity & Inclusion' brochure.",
       "family": "Single",
-      "stabilityPenalty": 30
+      "stabilityPenalty": 25
     },
     {
       "id": "burnout",
@@ -291,7 +295,7 @@
       "salaryRange": [45000, 45000],
       "note": "Official Role: 'Canine Logistics Officer'. Their only job is walking the CEO's poodle.",
       "family": "Single",
-      "stabilityPenalty": 25
+      "stabilityPenalty": 20
     },
     {
       "id": "scandal",
