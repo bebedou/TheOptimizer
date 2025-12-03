@@ -2,19 +2,23 @@
   "config": {
     "startingMoney": 500,
     "startingQuota": 3,
-    "maxCustomersPerDay": 5,
+    "maxCustomersPerDay": 6,
     "rentCost": 100,
     "foodCost": 50
   },
   "names": [
     "J. Smith", "A. Doe", "M. Chen", "K. Ivanova", "B. Obama", 
     "T. Anderson", "L. Croft", "P. Parker", "G. Freeman", "S. Connor",
-    "D. Schrute", "M. Scott", "L. Simpson", "W. White"
+    "D. Schrute", "M. Scott", "L. Simpson", "W. White", "H. Potter",
+    "J. Wick", "T. Stark", "B. Wayne", "C. Kent", "P. Venkman",
+    "R. Sanchez", "M. Fly", "E. Ripley", "S. Rogers", "L. Skywalker"
   ],
   "roles": [
     "Data Entry", "Sales Assoc.", "Manager", "DevOps", 
     "HR Rep", "Intern", "Accountant", "Custodian", 
-    "Prompt Eng.", "Chief Vibes Officer"
+    "Prompt Eng.", "Chief Vibes Officer", "Scrum Master",
+    "Growth Hacker", "Cloud Evangelist", "Synergy Coord.",
+    "Visionary", "Ninja Rockster", "Coffee Lead", "Blockchain Exp."
   ],
   "dailyRules": [
     { 
@@ -37,7 +41,19 @@
     },
     { 
       "day": 4, 
-      "text": "No Rules. Just hit the quota (3 Fires). We need empty desks.", 
+      "text": "Youth Movement: Fire anyone older than 50. We need 'digital natives'.", 
+      "type": "age_high", 
+      "val": 50 
+    },
+    { 
+      "day": 5, 
+      "text": "Flattening the Hierarchy: Fire anyone with 'Manager' or 'Lead' in their title.", 
+      "type": "role_keyword", 
+      "val": "Manager" 
+    },
+    { 
+      "day": 6, 
+      "text": "No Rules. Just hit the quota (4 Fires). We need empty desks.", 
       "type": "free_fire", 
       "val": null 
     }
@@ -124,6 +140,166 @@
       "salaryRange": [60000, 60000],
       "note": "Completely average across all metrics. No complaints, no praise.",
       "family": "Married"
+    },
+    {
+      "id": "ghost_employee",
+      "title": "The Ghost",
+      "perfRange": [0, 0],
+      "salaryRange": [85000, 85000],
+      "note": "Badge swipes show they haven't entered the building in 8 months, but they still cash checks.",
+      "family": "Unknown"
+    },
+    {
+      "id": "crypto_miner",
+      "title": "The Miner",
+      "perfRange": [60, 70],
+      "salaryRange": [90000, 95000],
+      "note": "Caught installing Bitcoin mining software on company servers. Electricity bill spiked 400%.",
+      "family": "Single"
+    },
+    {
+      "id": "whistleblower",
+      "title": "The Whistleblower",
+      "perfRange": [95, 99],
+      "salaryRange": [75000, 80000],
+      "note": "Excellent work, but asked too many questions about the 'Waste Disposal' account.",
+      "family": "Married"
+    },
+    {
+      "id": "remote_lie",
+      "title": "The Traveler",
+      "perfRange": [80, 85],
+      "salaryRange": [110000, 110000],
+      "note": "Claims to work from home (NY), but IP address traces to a beach in Bali.",
+      "family": "Single"
+    },
+    {
+      "id": "pension_saver",
+      "title": "The Liability",
+      "perfRange": [75, 80],
+      "salaryRange": [90000, 90000],
+      "note": "Due to vest full pension benefits next week. Firing now saves company $2M long-term.",
+      "family": "Married, 4 Kids"
+    },
+    {
+      "id": "ai_bot",
+      "title": "The Script",
+      "perfRange": [99, 100],
+      "salaryRange": [150000, 150000],
+      "note": "Employee does not exist. It's a Python script written by a former employee to collect salary.",
+      "family": "None"
+    },
+    {
+      "id": "office_thief",
+      "title": "The Klepto",
+      "perfRange": [45, 55],
+      "salaryRange": [40000, 40000],
+      "note": "Steals lunches, staplers, and toilet paper. Low value loss, but high annoyance.",
+      "family": "Single"
+    },
+    {
+      "id": "spy",
+      "title": "The Mole",
+      "perfRange": [90, 95],
+      "salaryRange": [140000, 160000],
+      "note": "Security flagged an outgoing email to our biggest competitor containing blueprints.",
+      "family": "Divorced"
+    },
+    {
+      "id": "too_happy",
+      "title": "The Morale Boost",
+      "perfRange": [30, 40],
+      "salaryRange": [50000, 50000],
+      "note": "Terrible at the actual job, but organizes birthday parties and brings donuts. Everyone loves them.",
+      "family": "Married"
+    },
+    {
+      "id": "idea_guy",
+      "title": "The Visionary",
+      "perfRange": [10, 20],
+      "salaryRange": [200000, 200000],
+      "note": "Calls lots of meetings to 'synergize paradigms'. Has produced 0 deliverables in 2 years.",
+      "family": "Single"
+    },
+    {
+      "id": "diversity_brochure",
+      "title": "The Face",
+      "perfRange": [40, 50],
+      "salaryRange": [60000, 60000],
+      "note": "HR Note: Do not fire. They are on the cover of the 'Diversity & Inclusion' brochure.",
+      "family": "Single"
+    },
+    {
+      "id": "burnout",
+      "title": "The Burnout",
+      "perfRange": [20, 30],
+      "salaryRange": [80000, 80000],
+      "note": "Was Employee of the Month for 3 years straight. Hasn't spoken a word in 2 weeks. Stares at wall.",
+      "family": "Divorced"
+    },
+    {
+      "id": "office_romance",
+      "title": "The Lover",
+      "perfRange": [60, 60],
+      "salaryRange": [70000, 70000],
+      "note": "Caught engaging in 'inappropriate relations' with the VP of Sales in the server room.",
+      "family": "Single (Technically)"
+    },
+    {
+      "id": "wrong_ssn",
+      "title": "The Unknown",
+      "perfRange": [50, 50],
+      "salaryRange": [55000, 55000],
+      "note": "Social Security Number belongs to a deceased person from 1982.",
+      "family": "Unknown"
+    },
+    {
+      "id": "dog_walker",
+      "title": "The Walker",
+      "perfRange": [5, 5],
+      "salaryRange": [45000, 45000],
+      "note": "Official Role: 'Canine Logistics Officer'. Their only job is walking the CEO's poodle.",
+      "family": "Single"
+    },
+    {
+      "id": "scandal",
+      "title": "The PR Risk",
+      "perfRange": [85, 90],
+      "salaryRange": [90000, 90000],
+      "note": "Went viral on Twitter for shouting at a waiter. Bad PR for the company.",
+      "family": "Married"
+    },
+    {
+      "id": "overqualified",
+      "title": "The Doctor",
+      "perfRange": [95, 100],
+      "salaryRange": [35000, 35000],
+      "note": "Has a PhD in Astrophysics. Working in Data Entry. Will likely quit soon anyway.",
+      "family": "Single"
+    },
+    {
+      "id": "blackmail",
+      "title": "The Threat",
+      "perfRange": [10, 10],
+      "salaryRange": [120000, 120000],
+      "note": "Terrible employee, but claims to have photos of you at the Christmas party. 'You fire me, I post them.'",
+      "family": "Single"
+    },
+    {
+      "id": "recovering",
+      "title": "The Fighter",
+      "perfRange": [65, 75],
+      "salaryRange": [50000, 50000],
+      "note": "Just returned from rehab. Performance is improving, but attendance is spotty due to therapy.",
+      "family": "Single, 1 Kid"
+    },
+    {
+      "id": "gamer",
+      "title": "The Gamer",
+      "perfRange": [80, 90],
+      "salaryRange": [75000, 75000],
+      "note": "Productivity is high, but was caught playing 'World of Warcraft' during Zoom meetings.",
+      "family": "Single"
     }
   ]
 }
