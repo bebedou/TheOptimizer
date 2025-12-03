@@ -262,6 +262,21 @@
             width: 50%;
             transition: width 0.3s;
         }
+
+        .news-ticker {
+            margin-top: 20px;
+            border-top: 1px dashed #555;
+            padding-top: 15px;
+            font-size: 0.85rem;
+            color: #aaa;
+            text-align: left;
+        }
+        .news-item {
+            margin-bottom: 8px;
+        }
+        .news-item strong {
+            color: var(--warn-color);
+        }
     </style>
 </head>
 <body>
@@ -359,6 +374,7 @@
     let names = [];
     let roles = [];
     let config = {};
+    let newsStories = {};
 
     let state = {
         day: 1,
@@ -370,8 +386,9 @@
         dayEnded: false,
         stability: 100,
         jobPerformance: 100,
-        dayQueue: [], // The pre-generated queue for the day
-        customersThisDay: 6 // Will scale dynamically
+        dayQueue: [], 
+        customersThisDay: 6,
+        firedLog: [] // Tracks who we fired this day
     };
 
     // --- INITIALIZATION ---
@@ -387,6 +404,8 @@
                 names = data.names || ["Unknown"];
                 roles = data.roles || ["Worker"];
                 config = data.config || {};
+                newsStories = data.newsStories || { "default": "is seeking new employment." };
+                
                 logBox.innerHTML += '<div class="log-entry log-success">Database Loaded. Protocols Active.</div>';
             } else {
                  throw new Error("HTTP error " + response.status);
@@ -399,6 +418,7 @@
             config = {}; 
             dailyRules = [{ day: 1, text: "System Error. Fire anyone.", type: "free_fire" }];
             scenarios = [{ id: "error", title: "Error", note: "Data corrupt", perfRange:[50,50], salaryRange:[50000,50000], family: "Unknown" }];
+            newsStories = { "default": "System Error: News feed unavailable." };
         } finally {
             state.money = (config.startingMoney !== undefined) ? config.startingMoney : 500;
             state.quotaTarget = (config.startingQuota !== undefined) ? config.startingQuota : 3;
@@ -416,6 +436,7 @@
         state.processedToday = 0;
         state.firedToday = 0;
         state.dayEnded = false;
+        state.firedLog = []; // Clear log
         
         let rule;
         if (dailyRules.length > 0) {
@@ -426,7 +447,6 @@
         }
         
         // 1. Scale Day Length based on Quota
-        // We ensure there are always at least (Quota + 2) employees to process
         const minCustomers = state.quotaTarget + 2;
         const cfgMax = (config.maxCustomersPerDay !== undefined) ? config.maxCustomersPerDay : 6;
         state.customersThisDay = Math.max(cfgMax, minCustomers);
@@ -444,28 +464,22 @@
     function generateDailyRoster(rule, requiredMatches, totalCount) {
         state.dayQueue = [];
         
-        // Step A: Generate Mandatory Matches (The "Guilty")
-        // These ensure the day is mathematically solvable
+        // Step A: Generate Mandatory Matches
         for (let i = 0; i < requiredMatches; i++) {
             state.dayQueue.push(generateEmployee(rule, true));
         }
 
-        // Step B: Generate Fillers (The "Innocent" or Randoms)
+        // Step B: Generate Fillers
         const fillerCount = totalCount - requiredMatches;
         for (let i = 0; i < fillerCount; i++) {
-            // We pass 'false' to forceMatch, meaning "Don't force a match", just be random.
-            // Note: Random might accidentally match too, which is fine (easier day).
             state.dayQueue.push(generateEmployee(rule, false));
         }
 
-        // Step C: Shuffle the Queue
-        // Fisher-Yates shuffle algorithm
+        // Step C: Shuffle
         for (let i = state.dayQueue.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [state.dayQueue[i], state.dayQueue[j]] = [state.dayQueue[j], state.dayQueue[i]];
         }
-        
-        console.log(`Generated Roster: ${state.dayQueue.length} employees. Guaranteed Guilty: ${requiredMatches}`);
     }
 
     function generateEmployee(rule, forceMatch) {
@@ -486,7 +500,6 @@
 
         // --- OVERRIDE LOGIC ---
         if (forceMatch && rule) {
-            // Surgically alter stats to ensure they are firable under the current rule
             if (rule.type === 'salary_high') {
                 salary = randomInt(rule.val + 1000, rule.val + 50000);
             } else if (rule.type === 'perf_low') {
@@ -497,7 +510,6 @@
             } else if (rule.type === 'age_high') {
                 age = randomInt(rule.val + 1, 65);
             } else if (rule.type === 'role_keyword') {
-                 // Try to find a role that matches the keyword
                  const matchingRole = roles.find(r => r.includes(rule.val));
                  if (matchingRole) role = matchingRole;
             }
@@ -530,7 +542,6 @@
             return;
         }
 
-        // Pop from the pre-generated queue
         state.currentEmployee = state.dayQueue.pop();
         renderEmployee(state.currentEmployee);
         state.processedToday++;
@@ -586,6 +597,9 @@
 
         if (action === 'FIRE') {
             state.firedToday++;
+            // LOG THIS FIRE FOR NEWS LATER
+            state.firedLog.push(emp);
+
             if (emp.stabilityPenalty > 0) {
                 state.stability -= emp.stabilityPenalty;
                 logMsg = `TERMINATED: ${emp.name}. WARNING: Stability Impact (-${emp.stabilityPenalty}%)`;
@@ -645,6 +659,23 @@
         logBox.scrollTop = logBox.scrollHeight;
     }
 
+    function getNewsUpdates(firedList) {
+        if (!firedList || firedList.length === 0) {
+            return "<div class='news-item'>No terminations filed today. The streets are quiet.</div>";
+        }
+
+        let html = "";
+        // Show max 3 news items to keep it clean
+        const maxItems = Math.min(firedList.length, 3);
+        
+        for (let i = 0; i < maxItems; i++) {
+            const emp = firedList[i];
+            const story = newsStories[emp.scenarioId] || newsStories["default"];
+            html += `<div class='news-item'><strong>> UPDATE (${emp.name}):</strong> ${story}</div>`;
+        }
+        return html;
+    }
+
     function endDay() {
         state.dayEnded = true;
         const modal = document.getElementById('modal-overlay');
@@ -682,6 +713,9 @@
         let netChange = dailyWage - expenses - quotaPenalty;
         state.money += netChange;
 
+        // GENERATE NEWS
+        const newsHTML = getNewsUpdates(state.firedLog);
+
         title.innerText = `SHIFT ${state.day} REPORT`;
         summary.innerHTML = `
             <div style="text-align:left; margin: 0 auto; display:inline-block;">
@@ -696,6 +730,11 @@
             </div>
             <br><br>
             <h2>TOTAL FUNDS: $${state.money}</h2>
+            
+            <div class="news-ticker">
+                <div style="color:var(--text-color); margin-bottom:10px;">--- LOCAL NEWS FEED ---</div>
+                ${newsHTML}
+            </div>
         `;
         
         if (state.money < 0) {

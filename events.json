@@ -333,5 +333,29 @@
       "family": "Single",
       "stabilityPenalty": 0
     }
-  ]
+  ],
+  "newsStories": {
+    "dead_weight": "became a Reddit moderator. They wield immense power now.",
+    "star_performer": "launched a startup in Silicon Valley. It was just valued at $1B.",
+    "sad_story": "lost their home. Local charities are organizing a fundraiser.",
+    "nepotism": "complained to their Uncle (the CEO). Internal Affairs is reviewing your file.",
+    "retirement": "moved to Florida immediately. They seem happier than ever.",
+    "redundancy": "started a popular blog about corporate inefficiency.",
+    "bribe": "was arrested for attempting to bribe a police officer during a traffic stop.",
+    "union": "is organizing a massive protest outside the building tomorrow.",
+    "new_hire": "is confused why they were fired on day 2. They are crying in the lobby.",
+    "average_joe": "found a similar job at a paper company in Slough.",
+    "ghost_employee": "vanished. No one can find them. Did they ever exist?",
+    "crypto_miner": "is now mining Dogecoin in their garage full time.",
+    "whistleblower": "leaked documents to the press. Our stock price dropped 4% after hours.",
+    "office_thief": "was caught stealing staplers from the unemployment office.",
+    "spy": "fled the country. Interpol has issued a warrant for their arrest.",
+    "too_happy": "is now a motivational speaker. 'The Power of Rejection' is a bestseller.",
+    "idea_guy": "is pitching 'Uber for Toasters' to investors. He has raised $2M.",
+    "burnout": "is sleeping for 14 hours a day. Recovery is slow but steady.",
+    "office_romance": "broke up with the VP of Sales. Awkward tension in the elevators.",
+    "gamer": "started a Twitch stream. 'Fired % Speedrun' is trending #1.",
+    "remote_lie": "is enjoying a permanent vacation in Bali.",
+    "default": "is currently seeking new employment opportunities."
+  }
 }
