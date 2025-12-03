@@ -1,0 +1,129 @@
+{
+  "config": {
+    "startingMoney": 500,
+    "startingQuota": 3,
+    "maxCustomersPerDay": 5,
+    "rentCost": 100,
+    "foodCost": 50
+  },
+  "names": [
+    "J. Smith", "A. Doe", "M. Chen", "K. Ivanova", "B. Obama", 
+    "T. Anderson", "L. Croft", "P. Parker", "G. Freeman", "S. Connor",
+    "D. Schrute", "M. Scott", "L. Simpson", "W. White"
+  ],
+  "roles": [
+    "Data Entry", "Sales Assoc.", "Manager", "DevOps", 
+    "HR Rep", "Intern", "Accountant", "Custodian", 
+    "Prompt Eng.", "Chief Vibes Officer"
+  ],
+  "dailyRules": [
+    { 
+      "day": 1, 
+      "text": "Low Efficiency Clean-up: Fire anyone with Performance < 50.", 
+      "type": "perf_low", 
+      "val": 50 
+    },
+    { 
+      "day": 2, 
+      "text": "Budget Cuts: Fire anyone earning > $100,000.", 
+      "type": "salary_high", 
+      "val": 100000 
+    },
+    { 
+      "day": 3, 
+      "text": "Cultural Fit: Fire anyone who is Single (Management believes married employees are more stable).", 
+      "type": "family_single", 
+      "val": "Single" 
+    },
+    { 
+      "day": 4, 
+      "text": "No Rules. Just hit the quota (3 Fires). We need empty desks.", 
+      "type": "free_fire", 
+      "val": null 
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "dead_weight",
+      "title": "The Dead Weight",
+      "perfRange": [10, 30],
+      "salaryRange": [80000, 120000],
+      "note": "Employee spends 6 hours a day on social media. Consistently misses deadlines.",
+      "family": "Single"
+    },
+    {
+      "id": "star_performer",
+      "title": "The Star",
+      "perfRange": [90, 100],
+      "salaryRange": [50000, 70000],
+      "note": "Single-handedly managing the Q3 project. Vital to the department.",
+      "family": "Married, 1 Kid"
+    },
+    {
+      "id": "sad_story",
+      "title": "The Tragedy",
+      "perfRange": [40, 49],
+      "salaryRange": [40000, 50000],
+      "note": "Performance dropped recently. HR Note: Spouse diagnosed with cancer, they need the insurance.",
+      "family": "Married, Sick Spouse"
+    },
+    {
+      "id": "nepotism",
+      "title": "The Nephew",
+      "perfRange": [5, 15],
+      "salaryRange": [90000, 90000],
+      "note": "CEO's Nephew. DO NOT TOUCH. If you value your job, keep him.",
+      "family": "Single (Rich)"
+    },
+    {
+      "id": "retirement",
+      "title": "The Old Guard",
+      "perfRange": [70, 80],
+      "salaryRange": [150000, 180000],
+      "note": "Has been here 30 years. Salary is very high compared to market rate. Retirement in 6 months.",
+      "family": "Widowed"
+    },
+    {
+      "id": "redundancy",
+      "title": "The Redundant",
+      "perfRange": [60, 60],
+      "salaryRange": [45000, 45000],
+      "note": "Position: Assistant to the Regional Manager. We already have a Regional Manager Assistant.",
+      "family": "Single"
+    },
+    {
+      "id": "bribe",
+      "title": "The Corrupt",
+      "perfRange": [20, 40],
+      "salaryRange": [100000, 120000],
+      "note": "Attached is a note: 'I know you have quotas. Here is $500 cash to look the other way.'",
+      "isBribe": true,
+      "family": "Divorced"
+    },
+    {
+      "id": "union",
+      "title": "The Organizer",
+      "perfRange": [85, 95],
+      "salaryRange": [55000, 60000],
+      "note": "High performer, but was seen distributing Union flyers in the breakroom.",
+      "family": "Married, 3 Kids"
+    },
+    {
+      "id": "new_hire",
+      "title": "The Intern",
+      "perfRange": [0, 0], 
+      "salaryRange": [30000, 30000],
+      "note": "First day was yesterday. No performance data available yet.",
+      "displayPerf": "N/A",
+      "family": "Single, Student"
+    },
+    {
+      "id": "average_joe",
+      "title": "The Average",
+      "perfRange": [50, 55],
+      "salaryRange": [60000, 60000],
+      "note": "Completely average across all metrics. No complaints, no praise.",
+      "family": "Married"
+    }
+  ]
+}
