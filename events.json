@@ -31,6 +31,16 @@
       "unlockDay": 1
     },
     {
+      "id": "company_retreat",
+      "name": "COMPANY RETREAT",
+      "type": "consumable",
+      "cost": 450,
+      "effectType": "stability_restore",
+      "value": 40,
+      "description": "Mandatory fun weekend in the woods. +40% Stability.",
+      "unlockDay": 3
+    },
+    {
       "id": "golden_stapler",
       "name": "GOLDEN STAPLER",
       "type": "passive",
@@ -51,6 +61,16 @@
       "unlockDay": 2
     },
     {
+      "id": "ergonomic_chair",
+      "name": "ERGONOMIC CHAIR",
+      "type": "passive",
+      "cost": 700,
+      "effectType": "stability_shield",
+      "value": 6,
+      "description": "Lumbar support soothes the guilt. -6% Stability penalty.",
+      "unlockDay": 4
+    },
+    {
       "id": "second_monitor",
       "name": "SECOND MONITOR",
       "type": "passive",
@@ -59,6 +79,16 @@
       "value": 5,
       "description": "Reduces Performance penalty for mistakes by 5%.",
       "unlockDay": 3
+    },
+    {
+      "id": "noise_cancelling",
+      "name": "NOISE CANCELLING",
+      "type": "passive",
+      "cost": 750,
+      "effectType": "performance_shield",
+      "value": 8,
+      "description": "Ignore the pleading screams. -8% Performance penalty.",
+      "unlockDay": 5
     }
   ],
   "names": [
@@ -66,14 +96,19 @@
     "T. Anderson", "L. Croft", "P. Parker", "G. Freeman", "S. Connor",
     "D. Schrute", "M. Scott", "L. Simpson", "W. White", "H. Potter",
     "J. Wick", "T. Stark", "B. Wayne", "C. Kent", "P. Venkman",
-    "R. Sanchez", "M. Fly", "E. Ripley", "S. Rogers", "L. Skywalker"
+    "R. Sanchez", "M. Fly", "E. Ripley", "S. Rogers", "L. Skywalker",
+    "K. Reeves", "E. Musk", "M. Zuckerberg", "J. Bezos", "G. Newell",
+    "H. Kojima", "S. Miyamoto", "T. Howard", "J. Carmack", "G. R. R. Martin",
+    "F. Frodo", "S. Gamgee", "A. Aragorn", "L. Legolas", "G. Gimli"
   ],
   "roles": [
     "Data Entry", "Sales Assoc.", "Manager", "DevOps", 
     "HR Rep", "Intern", "Accountant", "Custodian", 
     "Prompt Eng.", "Chief Vibes Officer", "Scrum Master",
     "Growth Hacker", "Cloud Evangelist", "Synergy Coord.",
-    "Visionary", "Ninja Rockster", "Coffee Lead", "Blockchain Exp."
+    "Visionary", "Ninja Rockster", "Coffee Lead", "Blockchain Exp.",
+    "Metaverse Realtor", "NFT Curator", "Sustainability Guru", "Thought Leader",
+    "Content Ninja", "Brand Warrior", "Social Media Wizard", "Full Stack Poet"
   ],
   "dailyRules": [
     { 
@@ -108,7 +143,31 @@
     },
     { 
       "day": 6, 
-      "text": "No Rules. Just hit the quota (4 Fires). We need empty desks.", 
+      "text": "Deep Cuts: Fire anyone earning > $80,000. We need to impress the shareholders.", 
+      "type": "salary_high", 
+      "val": 80000 
+    },
+    { 
+      "day": 7, 
+      "text": "Performance Review: Fire anyone with Performance < 70.", 
+      "type": "perf_low", 
+      "val": 70 
+    },
+    { 
+      "day": 8, 
+      "text": "Seniority Purge: Fire anyone older than 55. They are too expensive to insure.", 
+      "type": "age_high", 
+      "val": 55 
+    },
+    { 
+      "day": 9, 
+      "text": "Role Elimination: Fire anyone with 'Officer' or 'Specialist' in their title.", 
+      "type": "role_keyword", 
+      "val": "Officer" 
+    },
+    { 
+      "day": 10, 
+      "text": "Total Liquidation. Fire 5 people. Anyone. Just clear the desks.", 
       "type": "free_fire", 
       "val": null 
     }
@@ -381,6 +440,114 @@
       "note": "Employee does not exist. It's a Python script written by a former employee to collect salary.",
       "family": "None",
       "stabilityPenalty": 0
+    },
+    {
+      "id": "influencer",
+      "title": "The Influencer",
+      "perfRange": [20, 30],
+      "salaryRange": [60000, 60000],
+      "note": "Live streams their entire workday. 500k followers are watching you read this.",
+      "family": "Single",
+      "stabilityPenalty": 25
+    },
+    {
+      "id": "conspiracy",
+      "title": "The Theorist",
+      "perfRange": [40, 50],
+      "salaryRange": [55000, 55000],
+      "note": "Refuses to use company email because 'the cloud is listening'. Sends memos via carrier pigeon.",
+      "family": "Divorced",
+      "stabilityPenalty": 0
+    },
+    {
+      "id": "office_dj",
+      "title": "The DJ",
+      "perfRange": [30, 40],
+      "salaryRange": [45000, 45000],
+      "note": "Plays EDM at full volume in the open-plan office. Claims it boosts 'synergy flow'.",
+      "family": "Single",
+      "stabilityPenalty": 5
+    },
+    {
+      "id": "cat_in_suit",
+      "title": "The Cat",
+      "perfRange": [95, 100],
+      "salaryRange": [30000, 30000],
+      "note": "It is literally a cat in a small business suit. Best performance in the sector.",
+      "family": "Single",
+      "stabilityPenalty": 10
+    },
+    {
+      "id": "pyramid_scheme",
+      "title": "The Hun",
+      "perfRange": [10, 20],
+      "salaryRange": [50000, 50000],
+      "note": "Tries to sell essential oils to clients during support calls. 'Be your own boss!'",
+      "family": "Married",
+      "stabilityPenalty": 0
+    },
+    {
+      "id": "vampire",
+      "title": "The Night Owl",
+      "perfRange": [80, 90],
+      "salaryRange": [70000, 70000],
+      "note": "Only works the night shift. Refuses to attend daytime meetings. Skin is very pale.",
+      "family": "Single",
+      "stabilityPenalty": 5
+    },
+    {
+      "id": "time_traveler",
+      "title": "The Traveler",
+      "perfRange": [50, 50],
+      "salaryRange": [50000, 50000],
+      "note": "Claims to be from the year 2099 here to prevent a 'catastrophic merger'.",
+      "family": "Unknown",
+      "stabilityPenalty": 0
+    },
+    {
+      "id": "flat_earther",
+      "title": "The Skeptic",
+      "perfRange": [40, 60],
+      "salaryRange": [60000, 60000],
+      "note": "Argues with the Global Logistics team that shipping routes are fake.",
+      "family": "Married",
+      "stabilityPenalty": 0
+    },
+    {
+      "id": "vegan_evangelist",
+      "title": "The Crusader",
+      "perfRange": [70, 80],
+      "salaryRange": [65000, 65000],
+      "note": "Throws away everyone's lunch if it contains meat. Morale is at an all-time low.",
+      "family": "Single",
+      "stabilityPenalty": 5
+    },
+    {
+      "id": "budget_hacker",
+      "title": "The Optimizer",
+      "perfRange": [90, 95],
+      "salaryRange": [80000, 80000],
+      "note": "Found a way to automate their own job 5 years ago. Hasn't worked since.",
+      "family": "Single",
+      "stabilityPenalty": 10
+    },
+    {
+      "id": "nepotism_baby_2",
+      "title": "The Daughter",
+      "perfRange": [5, 10],
+      "salaryRange": [150000, 150000],
+      "note": "Daughter of the Chairman. Currently shopping online for yachts.",
+      "family": "Single (Rich)",
+      "stabilityPenalty": 45
+    },
+    {
+      "id": "alien",
+      "title": "The Human",
+      "perfRange": [50, 50],
+      "salaryRange": [60000, 60000],
+      "note": "Skin suit fits poorly. Occasionally blinks sideways. Works very hard to blend in.",
+      "family": "Unknown",
+      "stabilityPenalty": 5
     }
   ],
   "newsStories": {
@@ -471,6 +638,54 @@
     "ai_bot": [
       "was deleted from the server.",
       "is now haunting the company Slack channel."
+    ],
+    "influencer": [
+      "posted a crying video about being fired. It has 3 million views.",
+      "is trying to cancel the company on Twitter."
+    ],
+    "conspiracy": [
+      "is now posting 50 times a day about how the company is run by lizards.",
+      "was seen wearing a tinfoil hat in the park."
+    ],
+    "office_dj": [
+      "is now DJing at a local dive bar on Tuesdays.",
+      "started a pirate radio station broadcasting from their van."
+    ],
+    "cat_in_suit": [
+      "was adopted by a loving family. A happy ending!",
+      "is now the CEO of a rival pet food company."
+    ],
+    "pyramid_scheme": [
+      "is now a 'Diamond Level' distributor for Herbalife.",
+      "tried to recruit the unemployment officer into their downline."
+    ],
+    "vampire": [
+      "dissolved into a cloud of bats and flew away.",
+      "is happy to finally sleep in their coffin during the day."
+    ],
+    "time_traveler": [
+      "vanished into thin air leaving only scorch marks on the carpet.",
+      "was right. The merger destroyed the world in 2025."
+    ],
+    "flat_earther": [
+      "fell off the edge of the world. (Allegedly).",
+      "started a GoFundMe to prove Australia isn't real."
+    ],
+    "vegan_evangelist": [
+      "chained themselves to a tree in the parking lot.",
+      "opened a cruelty-free kale smoothie pop-up."
+    ],
+    "budget_hacker": [
+      "is enjoying their passive income on a beach.",
+      "was hired by Google to automate their HR department."
+    ],
+    "nepotism_baby_2": [
+      "called her dad. You might be fired tomorrow.",
+      "went to Europe for a 'mental health year'."
+    ],
+    "alien": [
+      "returned to the mothership. The invasion has been postponed.",
+      "was seen eating a stapler in the alleyway."
     ],
     "default": [
       "is currently seeking new employment opportunities.",
