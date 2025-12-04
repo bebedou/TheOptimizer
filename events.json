@@ -6,7 +6,8 @@
     "baseDailyWage": 150,
     "rentCost": 80,
     "foodCost": 40,
-    "maxCustomersPerDay": 8
+    "maxCustomersPerDay": 8,
+    "investigateCost": 30
   },
   "shopItems": [
     {
@@ -238,33 +239,6 @@
       "stabilityPenalty": 15
     },
     {
-      "id": "remote_lie",
-      "title": "The Traveler",
-      "perfRange": [80, 85],
-      "salaryRange": [110000, 110000],
-      "note": "Claims to work from home (NY), but IP address traces to a beach in Bali.",
-      "family": "Single",
-      "stabilityPenalty": 5
-    },
-    {
-      "id": "pension_saver",
-      "title": "The Liability",
-      "perfRange": [75, 80],
-      "salaryRange": [90000, 90000],
-      "note": "Due to vest full pension benefits next week. Firing now saves company $2M long-term.",
-      "family": "Married, 4 Kids",
-      "stabilityPenalty": 15
-    },
-    {
-      "id": "ai_bot",
-      "title": "The Script",
-      "perfRange": [99, 100],
-      "salaryRange": [150000, 150000],
-      "note": "Employee does not exist. It's a Python script written by a former employee to collect salary.",
-      "family": "None",
-      "stabilityPenalty": 0
-    },
-    {
       "id": "office_thief",
       "title": "The Klepto",
       "perfRange": [45, 55],
@@ -389,6 +363,24 @@
       "note": "Productivity is high, but was caught playing 'World of Warcraft' during Zoom meetings.",
       "family": "Single",
       "stabilityPenalty": 0
+    },
+    {
+      "id": "remote_lie",
+      "title": "The Traveler",
+      "perfRange": [80, 85],
+      "salaryRange": [110000, 110000],
+      "note": "Claims to work from home (NY), but IP address traces to a beach in Bali.",
+      "family": "Single",
+      "stabilityPenalty": 5
+    },
+    {
+      "id": "ai_bot",
+      "title": "The Script",
+      "perfRange": [99, 100],
+      "salaryRange": [150000, 150000],
+      "note": "Employee does not exist. It's a Python script written by a former employee to collect salary.",
+      "family": "None",
+      "stabilityPenalty": 0
     }
   ],
   "newsStories": {
@@ -475,6 +467,10 @@
     "remote_lie": [
       "is enjoying a permanent vacation in Bali.",
       "claimed unemployment benefits from a beach in Thailand."
+    ],
+    "ai_bot": [
+      "was deleted from the server.",
+      "is now haunting the company Slack channel."
     ],
     "default": [
       "is currently seeking new employment opportunities.",
