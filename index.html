@@ -225,7 +225,8 @@
             100% { opacity: 1; }
         }
 
-        #modal-overlay {
+        /* Overlay Styles (Shared by Intro and End Day) */
+        .overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.95);
@@ -233,9 +234,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 10;
+            z-index: 50;
         }
-        #modal-content {
+        .modal-content {
             text-align: center;
             max-width: 600px;
             border: 2px solid var(--text-color);
@@ -244,12 +245,16 @@
             max-height: 90vh;
             overflow-y: auto;
         }
-        #next-day-btn {
-            margin-top: 10px;
+        
+        #intro-overlay { display: flex; z-index: 100; } /* Start visible */
+
+        .full-width-btn {
+            margin-top: 20px;
             border-color: white;
             color: white;
             width: 100%;
         }
+        
         #loading-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -298,7 +303,30 @@
 <body>
 
     <div class="crt-container">
+        <!-- Init Loading -->
         <div id="loading-overlay">INITIALIZING CORPORATE PROTOCOLS...</div>
+
+        <!-- Intro Modal -->
+        <div id="intro-overlay" class="overlay">
+            <div class="modal-content">
+                <h1 style="color: var(--text-color); margin-bottom: 10px;">WELCOME, OPTIMIZER</h1>
+                <p style="color: #aaa; font-size: 0.9rem; line-height: 1.6;">
+                    You have been hired to restructure this company. Your goal is to maximize efficiency by terminating employees who meet the daily criteria.
+                </p>
+                <div style="text-align: left; margin: 20px 0; border: 1px dashed #444; padding: 15px;">
+                    <strong style="color:white">DIRECTIVES:</strong>
+                    <ul style="color: #aaa; font-size: 0.9rem;">
+                        <li><span style="color:var(--text-color)">JOB PERFORMANCE:</span> Increases when you follow orders. Determines your pay.</li>
+                        <li><span style="color:var(--text-color)">STABILITY:</span> Decreases when you fire key personnel. If it hits 0%, the company collapses.</li>
+                        <li><span style="color:var(--text-color)">QUOTA:</span> You must fire a minimum number of people daily.</li>
+                    </ul>
+                    <p style="font-size: 0.8rem; color: var(--warn-color); margin-top: 10px;">
+                        *TIP: Once your quota is met, you may continue working to earn performance bonuses, but be warned: excessive firing destroys stability.
+                    </p>
+                </div>
+                <button class="full-width-btn" onclick="closeIntro()">INITIALIZE INTERFACE</button>
+            </div>
+        </div>
 
         <header>
             <div class="stat-box">
@@ -351,8 +379,9 @@
         </main>
     </div>
 
-    <div id="modal-overlay">
-        <div id="modal-content">
+    <!-- End Day Modal -->
+    <div id="modal-overlay" class="overlay">
+        <div class="modal-content">
             <h1 id="modal-title">SHIFT ENDED</h1>
             <div id="modal-body-content">
                 <!-- Content injected via JS -->
@@ -383,6 +412,14 @@
         firedLog: []
     };
 
+    function closeIntro() {
+        document.getElementById('intro-overlay').style.display = 'none';
+        // Ensure game is initialized if it wasn't already
+        if (state.dayQueue.length === 0) {
+            initDay(); 
+        }
+    }
+
     async function initGame() {
         const logBox = document.getElementById('game-log');
         try {
@@ -410,6 +447,8 @@
             state.stability = (config.startingStability !== undefined) ? config.startingStability : 100;
             state.jobPerformance = (config.startingPerformance !== undefined) ? config.startingPerformance : 100;
             document.getElementById('loading-overlay').style.display = 'none';
+            // Note: initDay is NOT called here immediately if we want to wait for intro close,
+            // BUT since intro overlays everything, it's safe to run logic in background.
             initDay();
         }
     }
@@ -550,6 +589,7 @@
         let logMsg = "";
         let logClass = "";
 
+        // Check if employee matches the firing rule ("Guilty")
         let matchesFireCriteria = false;
         if (rule.type === 'perf_low' && emp.perf < rule.val) matchesFireCriteria = true;
         else if (rule.type === 'salary_high' && emp.salary > rule.val) matchesFireCriteria = true;
@@ -558,18 +598,43 @@
         else if (rule.type === 'role_keyword' && emp.role.includes(rule.val)) matchesFireCriteria = true;
         else if (rule.type === 'free_fire') matchesFireCriteria = true;
 
-        let followedOrders = false;
-        if (action === 'FIRE' && matchesFireCriteria) followedOrders = true;
-        if (action === 'KEEP' && !matchesFireCriteria) followedOrders = true;
+        // Quota Status
+        const quotaMet = state.firedToday >= state.quotaTarget;
 
+        // Determine if player made the "Right" choice for performance
+        let followedOrders = false;
+        
+        if (action === 'FIRE' && matchesFireCriteria) {
+            followedOrders = true;
+        } else if (action === 'KEEP') {
+            if (!matchesFireCriteria) {
+                // Not guilty, so keeping is correct
+                followedOrders = true;
+            } else if (quotaMet) {
+                // Guilty, BUT quota is met. Keeping is acceptable (Mercy Rule).
+                // Treating this as "Followed Orders" (or at least "Approved") to prevent penalty.
+                followedOrders = true;
+            }
+        }
+
+        // --- APPLY PERFORMANCE EFFECTS ---
         if (followedOrders) {
-            state.jobPerformance = Math.min(100, state.jobPerformance + 5);
-            logClass = 'log-success';
+            if (action === 'KEEP' && matchesFireCriteria && quotaMet) {
+                // The "Mercy" outcome: No bonus, but no penalty.
+                logMsg = `RETAINED: ${emp.name}. Quota met, retention authorized.`;
+                logClass = 'log-success';
+            } else {
+                // Standard Success (Firing guilty or Keeping innocent)
+                state.jobPerformance = Math.min(100, state.jobPerformance + 5);
+                logClass = 'log-success';
+            }
         } else {
+            // Failure (Firing innocent, or Keeping guilty BEFORE quota met)
             state.jobPerformance -= 15;
             logClass = 'log-fail';
         }
 
+        // --- APPLY STABILITY EFFECTS ---
         if (action === 'FIRE') {
             state.firedToday++;
             state.firedLog.push(emp);
@@ -585,17 +650,16 @@
                 state.money += 500;
                 logMsg = `RETAINED: Bribe accepted ($500).`;
                 logClass = 'log-warn';
-            } else {
-                logMsg = `RETAINED: ${emp.name}.`;
+            } else if (!followedOrders && !matchesFireCriteria) {
+                // Firing innocent failed? No, this block is KEEP. 
+                // If we are here in KEEP and !followedOrders, it means we kept a Guilty person BEFORE quota.
+                logMsg = `RETAINED: ${emp.name}. WARNING: Quota not met. Performance Penalty.`;
+            } else if (action === 'KEEP' && !matchesFireCriteria) {
+                 logMsg = `RETAINED: ${emp.name}.`;
             }
         }
 
-        // Logic update: End day immediately if quota met
-        if (state.firedToday >= state.quotaTarget) {
-            endDay();
-            return;
-        }
-
+        // Check Game Over
         if (state.jobPerformance <= 0) { triggerGameOver("TERMINATED FOR INCOMPETENCE. Performance reached 0%."); return; }
         if (state.stability < 33) { triggerGameOver("COMPANY COLLAPSED. Stability Critical (33%)."); return; }
 
@@ -742,17 +806,6 @@
             state.money -= perfCost;
             state.jobPerformance = Math.min(100, state.jobPerformance + perfVal);
         }
-        
-        // Re-render modal to update buttons and money
-        // We need to pass dummy values for the day summary since that hasn't changed
-        // But the total funds and buttons state needs update. 
-        // A cleaner way is to re-call renderEndDayModal with current state values, 
-        // but we need the original day summary data. 
-        // Simplified approach: just re-trigger endDay logic logic visual part? 
-        // Easier: Re-call renderEndDayModal with preserved day stats or just update DOM directly. 
-        // Let's just update the specific elements if they existed, but simpler to re-render the block.
-        // We'll approximate the display update by just re-calculating the static parts for display or storing them in a temp var.
-        // Actually, let's just update the DOM elements directly for this MVP.
         
         // Update money display
         const balanceDisplay = document.querySelector('.balance-display');
