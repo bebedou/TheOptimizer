@@ -197,26 +197,39 @@
         .btn-fire:hover { background-color: rgba(255, 51, 51, 0.1); }
         
         /* Modal Action Buttons */
-        .modal-actions {
+        .modal-shop-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 20px 0;
+            gap: 10px;
+            margin: 10px 0;
         }
         .btn-upgrade {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             padding: 10px;
-            border-color: var(--warn-color);
+            border: 1px solid var(--warn-color);
             color: var(--warn-color);
+            background: rgba(0,0,0,0.5);
+            text-align: left;
+            cursor: pointer;
         }
         .btn-upgrade:hover { background-color: rgba(255, 170, 51, 0.1); }
         .btn-upgrade:disabled { opacity: 0.3; cursor: not-allowed; border-color: #555; color: #555; }
+        .btn-upgrade strong { display: block; margin-bottom: 3px; font-size: 0.9rem;}
+
+        .shop-section-title {
+            color: #888;
+            font-size: 0.8rem;
+            margin: 15px 0 5px 0;
+            border-bottom: 1px solid #333;
+            padding-bottom: 2px;
+        }
 
         @media (max-width: 600px) {
             main { grid-template-columns: 1fr; }
             .left-panel { display: none; }
             .crt-container { height: 100vh; padding: 10px; }
             header { grid-template-columns: 1fr 1fr; gap: 5px; }
+            .modal-shop-grid { grid-template-columns: 1fr; }
         }
 
         @keyframes blink {
@@ -225,7 +238,7 @@
             100% { opacity: 1; }
         }
 
-        /* Overlay Styles (Shared by Intro and End Day) */
+        /* Overlay Styles */
         .overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -239,6 +252,7 @@
         .modal-content {
             text-align: center;
             max-width: 600px;
+            width: 90%;
             border: 2px solid var(--text-color);
             padding: 30px;
             background-color: #000;
@@ -246,7 +260,7 @@
             overflow-y: auto;
         }
         
-        #intro-overlay { display: flex; z-index: 100; } /* Start visible */
+        #intro-overlay { display: flex; z-index: 100; }
 
         .full-width-btn {
             margin-top: 20px;
@@ -287,7 +301,7 @@
             font-size: 0.85rem;
             color: #aaa;
             text-align: left;
-            max-height: 150px;
+            max-height: 100px;
             overflow-y: auto;
         }
         .news-item { margin-bottom: 8px; }
@@ -317,7 +331,7 @@
                     <strong style="color:white">DIRECTIVES:</strong>
                     <ul style="color: #aaa; font-size: 0.9rem;">
                         <li><span style="color:var(--text-color)">JOB PERFORMANCE:</span> Increases when you follow orders. Determines your pay.</li>
-                        <li><span style="color:var(--text-color)">STABILITY:</span> Decreases when you fire key personnel. If it hits 0%, the company collapses.</li>
+                        <li><span style="color:var(--text-color)">STABILITY:</span> Decreases when you fire key personnel. If it hits 33%, the company collapses.</li>
                         <li><span style="color:var(--text-color)">QUOTA:</span> You must fire a minimum number of people daily.</li>
                     </ul>
                     <p style="font-size: 0.8rem; color: var(--warn-color); margin-top: 10px;">
@@ -396,6 +410,7 @@
     let roles = [];
     let config = {};
     let newsStories = {};
+    let shopItems = [];
 
     let state = {
         day: 1,
@@ -409,12 +424,12 @@
         jobPerformance: 100,
         dayQueue: [], 
         customersThisDay: 6,
-        firedLog: []
+        firedLog: [],
+        inventory: [] // Stores IDs of bought passives
     };
 
     function closeIntro() {
         document.getElementById('intro-overlay').style.display = 'none';
-        // Ensure game is initialized if it wasn't already
         if (state.dayQueue.length === 0) {
             initDay(); 
         }
@@ -432,6 +447,7 @@
                 roles = data.roles || ["Worker"];
                 config = data.config || {};
                 newsStories = data.newsStories || { "default": ["is seeking new employment."] };
+                shopItems = data.shopItems || [];
                 logBox.innerHTML += '<div class="log-entry log-success">Database Loaded. Protocols Active.</div>';
             } else { throw new Error("HTTP error " + response.status); }
         } catch (error) {
@@ -447,8 +463,6 @@
             state.stability = (config.startingStability !== undefined) ? config.startingStability : 100;
             state.jobPerformance = (config.startingPerformance !== undefined) ? config.startingPerformance : 100;
             document.getElementById('loading-overlay').style.display = 'none';
-            // Note: initDay is NOT called here immediately if we want to wait for intro close,
-            // BUT since intro overlays everything, it's safe to run logic in background.
             initDay();
         }
     }
@@ -573,6 +587,15 @@
         document.getElementById('emp-note').innerText = emp.note;
     }
 
+    function getPassiveValue(type) {
+        let val = 0;
+        state.inventory.forEach(itemId => {
+            const item = shopItems.find(i => i.id === itemId);
+            if(item && item.effectType === type) val += item.value;
+        });
+        return val;
+    }
+
     function processEmployee(action) {
         if (state.dayEnded) return;
 
@@ -589,7 +612,6 @@
         let logMsg = "";
         let logClass = "";
 
-        // Check if employee matches the firing rule ("Guilty")
         let matchesFireCriteria = false;
         if (rule.type === 'perf_low' && emp.perf < rule.val) matchesFireCriteria = true;
         else if (rule.type === 'salary_high' && emp.salary > rule.val) matchesFireCriteria = true;
@@ -598,49 +620,41 @@
         else if (rule.type === 'role_keyword' && emp.role.includes(rule.val)) matchesFireCriteria = true;
         else if (rule.type === 'free_fire') matchesFireCriteria = true;
 
-        // Quota Status
         const quotaMet = state.firedToday >= state.quotaTarget;
-
-        // Determine if player made the "Right" choice for performance
         let followedOrders = false;
         
-        if (action === 'FIRE' && matchesFireCriteria) {
-            followedOrders = true;
-        } else if (action === 'KEEP') {
-            if (!matchesFireCriteria) {
-                // Not guilty, so keeping is correct
-                followedOrders = true;
-            } else if (quotaMet) {
-                // Guilty, BUT quota is met. Keeping is acceptable (Mercy Rule).
-                // Treating this as "Followed Orders" (or at least "Approved") to prevent penalty.
-                followedOrders = true;
-            }
+        if (action === 'FIRE' && matchesFireCriteria) followedOrders = true;
+        else if (action === 'KEEP') {
+            if (!matchesFireCriteria) followedOrders = true;
+            else if (quotaMet) followedOrders = true;
         }
 
-        // --- APPLY PERFORMANCE EFFECTS ---
         if (followedOrders) {
             if (action === 'KEEP' && matchesFireCriteria && quotaMet) {
-                // The "Mercy" outcome: No bonus, but no penalty.
                 logMsg = `RETAINED: ${emp.name}. Quota met, retention authorized.`;
                 logClass = 'log-success';
             } else {
-                // Standard Success (Firing guilty or Keeping innocent)
                 state.jobPerformance = Math.min(100, state.jobPerformance + 5);
                 logClass = 'log-success';
             }
         } else {
-            // Failure (Firing innocent, or Keeping guilty BEFORE quota met)
-            state.jobPerformance -= 15;
+            // Apply Passive Shield for Performance
+            const shield = getPassiveValue('performance_shield');
+            const penalty = Math.max(5, 15 - shield); // Min penalty is 5
+            state.jobPerformance -= penalty;
             logClass = 'log-fail';
         }
 
-        // --- APPLY STABILITY EFFECTS ---
         if (action === 'FIRE') {
             state.firedToday++;
             state.firedLog.push(emp);
             if (emp.stabilityPenalty > 0) {
-                state.stability -= emp.stabilityPenalty;
-                logMsg = `TERMINATED: ${emp.name}. WARNING: Stability Impact (-${emp.stabilityPenalty}%)`;
+                // Apply Passive Shield for Stability
+                const shield = getPassiveValue('stability_shield');
+                const penalty = Math.max(0, emp.stabilityPenalty - shield);
+                
+                state.stability -= penalty;
+                logMsg = `TERMINATED: ${emp.name}. WARNING: Stability Impact (-${penalty}%)`;
                 logClass = 'log-warn';
             } else {
                 logMsg = `TERMINATED: ${emp.name}. Stability Unaffected.`;
@@ -651,15 +665,12 @@
                 logMsg = `RETAINED: Bribe accepted ($500).`;
                 logClass = 'log-warn';
             } else if (!followedOrders && !matchesFireCriteria) {
-                // Firing innocent failed? No, this block is KEEP. 
-                // If we are here in KEEP and !followedOrders, it means we kept a Guilty person BEFORE quota.
                 logMsg = `RETAINED: ${emp.name}. WARNING: Quota not met. Performance Penalty.`;
             } else if (action === 'KEEP' && !matchesFireCriteria) {
                  logMsg = `RETAINED: ${emp.name}.`;
             }
         }
 
-        // Check Game Over
         if (state.jobPerformance <= 0) { triggerGameOver("TERMINATED FOR INCOMPETENCE. Performance reached 0%."); return; }
         if (state.stability < 33) { triggerGameOver("COMPANY COLLAPSED. Stability Critical (33%)."); return; }
 
@@ -706,8 +717,6 @@
     function endDay() {
         state.dayEnded = true;
         const modal = document.getElementById('modal-overlay');
-        const bodyContent = document.getElementById('modal-body-content');
-        
         modal.style.display = 'flex';
 
         const baseWage = config.baseDailyWage || 150;
@@ -716,44 +725,74 @@
         
         let performanceBonus = 0;
         if (state.jobPerformance > 50) { performanceBonus = (state.jobPerformance - 50) * 2; }
-        let dailyWage = baseWage + performanceBonus;
+        
+        // Passive Wage Bonus
+        const passiveWageBonus = getPassiveValue('wage_bonus');
+        
+        let dailyWage = baseWage + performanceBonus + passiveWageBonus;
         let expenses = rent + food;
         let quotaPenalty = 0;
         let quotaMsg = `<span style="color:#3f3">MET</span>`;
+        
         if (state.firedToday < state.quotaTarget) {
             quotaPenalty = 100; 
             state.jobPerformance = Math.max(0, state.jobPerformance - 30);
             quotaMsg = `<span style="color:#f33">MISSED (Perf -30%, -$100 Fine)</span>`;
         }
+        
         if (state.jobPerformance <= 0) {
             modal.style.display = 'none';
             triggerGameOver("TERMINATED FOR INCOMPETENCE. Performance hit 0% after penalties.");
             return;
         }
+        
         let netChange = dailyWage - expenses - quotaPenalty;
         state.money += netChange;
 
         const newsHTML = getNewsUpdates(state.firedLog);
         
-        // --- RENDER MODAL WITH UPGRADE BUTTONS ---
-        renderEndDayModal(baseWage, performanceBonus, expenses, quotaMsg, netChange, newsHTML);
+        // Render Modal with Shop Logic
+        renderEndDayModal(baseWage, performanceBonus, passiveWageBonus, expenses, quotaMsg, netChange, newsHTML);
         
         if (state.money < 0) {
             document.getElementById('next-day-btn').innerText = "GAME OVER";
             document.getElementById('next-day-btn').onclick = () => location.reload();
-            bodyContent.innerHTML += "<br><span style='color:red'>YOU HAVE GONE BANKRUPT. EVICTED.</span>";
+            document.getElementById('modal-body-content').innerHTML += "<br><span style='color:red'>YOU HAVE GONE BANKRUPT. EVICTED.</span>";
         }
     }
 
-    function renderEndDayModal(baseWage, perfBonus, expenses, quotaMsg, netChange, newsHTML) {
+    function renderEndDayModal(baseWage, perfBonus, passiveBonus, expenses, quotaMsg, netChange, newsHTML) {
         const bodyContent = document.getElementById('modal-body-content');
-        const stabCost = config.stabilityRestorationCost || 150;
-        const stabVal = config.stabilityRestorationValue || 15;
-        const perfCost = config.performanceRestorationCost || 150;
-        const perfVal = config.performanceRestorationValue || 15;
+        
+        // Separate Items by Type
+        const consumables = shopItems.filter(i => i.type === 'consumable' && state.day >= i.unlockDay);
+        const upgrades = shopItems.filter(i => i.type === 'passive' && state.day >= i.unlockDay);
 
-        const canBuyStab = state.money >= stabCost && state.stability < 100;
-        const canBuyPerf = state.money >= perfCost && state.jobPerformance < 100;
+        let consumablesHTML = consumables.map(item => {
+            // Check specific conditions for consumables (e.g. can't buy health if full)
+            let disabled = false;
+            if(state.money < item.cost) disabled = true;
+            if(item.effectType.includes('stability') && state.stability >= 100) disabled = true;
+            if(item.effectType.includes('performance') && state.jobPerformance >= 100) disabled = true;
+            
+            return `
+                <button class="btn-upgrade" onclick="buyItem('${item.id}')" ${disabled ? 'disabled' : ''}>
+                    <strong>${item.name} ($${item.cost})</strong>
+                    ${item.description}
+                </button>
+            `;
+        }).join('');
+
+        let upgradesHTML = upgrades.map(item => {
+            const owned = state.inventory.includes(item.id);
+            const canAfford = state.money >= item.cost;
+            return `
+                <button class="btn-upgrade" onclick="buyItem('${item.id}')" ${owned || !canAfford ? 'disabled' : ''}>
+                    <strong>${item.name} ($${item.cost}) ${owned ? '[OWNED]' : ''}</strong>
+                    ${item.description}
+                </button>
+            `;
+        }).join('');
 
         bodyContent.innerHTML = `
             <div style="text-align:left; margin: 0 auto; display:inline-block;">
@@ -761,6 +800,7 @@
                 ---------------------------<br>
                 Base Wage: +$${baseWage}<br>
                 Perf. Bonus: +$${perfBonus}<br>
+                Passive Bonus: +$${passiveBonus}<br>
                 Rent & Food: -$${expenses}<br>
                 Quota Status: ${quotaMsg}<br>
                 ---------------------------<br>
@@ -769,63 +809,78 @@
             
             <h2 class="balance-display">TOTAL FUNDS: $${state.money}</h2>
             
-            <div style="border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;">
-                <div style="color: #888; margin-bottom: 5px;">MANAGEMENT ACTIONS</div>
-                <div class="modal-actions">
-                    <button class="btn-upgrade" 
-                        onclick="buyUpgrade('stability')" 
-                        ${!canBuyStab ? 'disabled' : ''}>
-                        HOST PIZZA PARTY<br>
-                        <small>Cost: $${stabCost} | +${stabVal}% Stability</small>
-                    </button>
-                    <button class="btn-upgrade" 
-                        onclick="buyUpgrade('performance')" 
-                        ${!canBuyPerf ? 'disabled' : ''}>
-                        HIRE CONSULTANT<br>
-                        <small>Cost: $${perfCost} | +${perfVal}% Performance</small>
-                    </button>
+            <div class="news-ticker"><div style="color:var(--text-color); margin-bottom:5px;">--- LOCAL NEWS FEED ---</div>${newsHTML}</div>
+
+            <div style="border-top: 1px solid #333; margin-top: 15px; padding-top: 10px;">
+                <div class="shop-section-title">IMMEDIATE ACTIONS</div>
+                <div class="modal-shop-grid">
+                    ${consumablesHTML.length > 0 ? consumablesHTML : '<div style="color:#555; font-size:0.8rem">No actions available.</div>'}
+                </div>
+                
+                <div class="shop-section-title">OFFICE UPGRADES</div>
+                <div class="modal-shop-grid">
+                    ${upgradesHTML.length > 0 ? upgradesHTML : '<div style="color:#555; font-size:0.8rem">No upgrades unlocked yet. Check back later.</div>'}
                 </div>
             </div>
-
-            <div class="news-ticker"><div style="color:var(--text-color); margin-bottom:10px;">--- LOCAL NEWS FEED ---</div>${newsHTML}</div>
             
             <button id="next-day-btn" onclick="startNextDay()">START NEXT SHIFT</button>
         `;
     }
 
-    function buyUpgrade(type) {
-        const stabCost = config.stabilityRestorationCost || 150;
-        const stabVal = config.stabilityRestorationValue || 15;
-        const perfCost = config.performanceRestorationCost || 150;
-        const perfVal = config.performanceRestorationValue || 15;
-        
-        if (type === 'stability' && state.money >= stabCost) {
-            state.money -= stabCost;
-            state.stability = Math.min(100, state.stability + stabVal);
-        } else if (type === 'performance' && state.money >= perfCost) {
-            state.money -= perfCost;
-            state.jobPerformance = Math.min(100, state.jobPerformance + perfVal);
+    function buyItem(itemId) {
+        const item = shopItems.find(i => i.id === itemId);
+        if(!item || state.money < item.cost) return;
+
+        // Deduction
+        state.money -= item.cost;
+
+        // Effect
+        if (item.type === 'consumable') {
+            if (item.effectType === 'stability_restore') state.stability = Math.min(100, state.stability + item.value);
+            if (item.effectType === 'performance_restore') state.jobPerformance = Math.min(100, state.jobPerformance + item.value);
+        } else if (item.type === 'passive') {
+            state.inventory.push(item.id);
         }
+
+        // Re-render UI
+        // Note: For simplicity, we just trigger endDay visual refresh logic here manually 
+        // In a complex app we'd have a separate render function. 
+        // We will just call renderEndDayModal with cached values from endDay scope if possible, 
+        // BUT we don't have access to them easily without globals.
+        // Quick fix: we just re-run the render logic by extracting current state values.
         
-        // Update money display
-        const balanceDisplay = document.querySelector('.balance-display');
-        if(balanceDisplay) balanceDisplay.innerText = `TOTAL FUNDS: $${state.money}`;
+        // Re-calculate visual stats
+        const baseWage = config.baseDailyWage || 150;
+        const rent = config.rentCost || 80;
+        const food = config.foodCost || 40;
+        let performanceBonus = 0;
+        if (state.jobPerformance > 50) { performanceBonus = (state.jobPerformance - 50) * 2; }
+        const passiveWageBonus = getPassiveValue('wage_bonus');
+        let dailyWage = baseWage + performanceBonus + passiveWageBonus;
+        let expenses = rent + food;
+        // NOTE: We don't recalculate netChange here for the daily summary because that summary was for the DAY THAT PASSED.
+        // However, user just spent money, so "Total Funds" needs update.
+        // We will just re-render the modal. The "Net Profit" line will show the PAST day's profit, which is correct.
         
-        // Update buttons state
-        const stabBtn = document.querySelectorAll('.btn-upgrade')[0];
-        const perfBtn = document.querySelectorAll('.btn-upgrade')[1];
+        // We need to fetch the LAST calculated netChange. Since we didn't store it globally, we will reconstruct it for display.
+        // Actually, let's just use 0 or "---" if we want to be lazy, OR better:
+        // We can just query the DOM for the previous Net Profit text? No that's messy.
+        // Let's just recalculate it based on current knowns, assuming firedToday hasn't changed.
         
-        if(stabBtn) {
-            const canBuy = state.money >= stabCost && state.stability < 100;
-            stabBtn.disabled = !canBuy;
+        let quotaPenalty = 0;
+        let quotaMsg = `<span style="color:#3f3">MET</span>`;
+        if (state.firedToday < state.quotaTarget) {
+            quotaPenalty = 100; 
+            quotaMsg = `<span style="color:#f33">MISSED</span>`;
         }
-        if(perfBtn) {
-            const canBuy = state.money >= perfCost && state.jobPerformance < 100;
-            perfBtn.disabled = !canBuy;
-        }
-        
-        // Update header UI in background too so user sees bar go up
-        updateUI();
+        let netChange = dailyWage - expenses - quotaPenalty;
+
+        // We need the news HTML again? It's static. Let's grab it from DOM? 
+        // Or simpler: Just re-generate it. It's fast.
+        const newsHTML = getNewsUpdates(state.firedLog);
+
+        renderEndDayModal(baseWage, performanceBonus, passiveWageBonus, expenses, quotaMsg, netChange, newsHTML);
+        updateUI(); // Update background header
     }
 
     function startNextDay() {

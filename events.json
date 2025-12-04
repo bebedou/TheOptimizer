@@ -6,12 +6,60 @@
     "baseDailyWage": 150,
     "rentCost": 80,
     "foodCost": 40,
-    "maxCustomersPerDay": 8,
-    "stabilityRestorationCost": 150,
-    "stabilityRestorationValue": 15,
-    "performanceRestorationCost": 150,
-    "performanceRestorationValue": 15
+    "maxCustomersPerDay": 8
   },
+  "shopItems": [
+    {
+      "id": "pizza_party",
+      "name": "HOST PIZZA PARTY",
+      "type": "consumable",
+      "cost": 150,
+      "effectType": "stability_restore",
+      "value": 15,
+      "description": "Boosts morale immediately. +15% Stability.",
+      "unlockDay": 1
+    },
+    {
+      "id": "consultant",
+      "name": "HIRE CONSULTANT",
+      "type": "consumable",
+      "cost": 150,
+      "effectType": "performance_restore",
+      "value": 15,
+      "description": "Optimizes workflows. +15% Performance.",
+      "unlockDay": 1
+    },
+    {
+      "id": "golden_stapler",
+      "name": "GOLDEN STAPLER",
+      "type": "passive",
+      "cost": 400,
+      "effectType": "wage_bonus",
+      "value": 25,
+      "description": "A symbol of power. Increases Daily Wage by $25.",
+      "unlockDay": 2
+    },
+    {
+      "id": "stress_ball",
+      "name": "STRESS BALL",
+      "type": "passive",
+      "cost": 350,
+      "effectType": "stability_shield",
+      "value": 3,
+      "description": "Reduces Stability penalty by 3% when firing VIPs.",
+      "unlockDay": 2
+    },
+    {
+      "id": "second_monitor",
+      "name": "SECOND MONITOR",
+      "type": "passive",
+      "cost": 500,
+      "effectType": "performance_shield",
+      "value": 5,
+      "description": "Reduces Performance penalty for mistakes by 5%.",
+      "unlockDay": 3
+    }
+  ],
   "names": [
     "J. Smith", "A. Doe", "M. Chen", "K. Ivanova", "B. Obama", 
     "T. Anderson", "L. Croft", "P. Parker", "G. Freeman", "S. Connor",
